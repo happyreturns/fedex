@@ -3,16 +3,133 @@ package fedex
 
 // Structures to unmarshall the Fedex SOAP answer into
 
+type Reply struct {
+	HighestSeverity string
+	Notifications   []Notification
+	Version         Version
+}
+
+func (r Reply) Failed() bool {
+	return r.HighestSeverity != "SUCCESS"
+}
+
 // TrackReply : Track reply root (`xml:"Body>TrackReply"`)
 type TrackReply struct {
-	HighestSeverity       string
-	Notifications         []Notification
-	Version               Version
+	Reply
 	CompletedTrackDetails []CompletedTrackDetail
 }
 
-func (r TrackReply) Failed() bool {
-	return r.HighestSeverity != "SUCCESS"
+// ProcessShipReply : Process shipment reply root (`xml:"Body>ProcessShipmentReply"`)
+type ProcessShipmentReply struct {
+	Reply
+	JobId                   string
+	TransactionDetail       TransactionDetail
+	CompletedShipmentDetail CompletedShipmentDetail
+}
+
+type TransactionDetail struct {
+	CustomerTransactionId string
+}
+
+type CompletedShipmentDetail struct {
+	UsDomestic              string
+	CarrierCode             string
+	MasterTrackingId        TrackingID
+	ServiceTypeDescription  string
+	ServiceDescription      ServiceDescription
+	PackagingDescription    string
+	OperationalDetail       OperationalDetail
+	ShipmentRating          Rating
+	CompletedPackageDetails CompletedPackageDetails
+}
+
+type Part struct {
+	DocumentPartSequenceNumber string
+	Image                      string
+}
+
+type Label struct {
+	Type                        string
+	ShippingDocumentDisposition string
+	ImageType                   string
+	Resolution                  string
+	CopiesToPrint               string
+	Parts                       []Part
+}
+
+type CompletedPackageDetails struct {
+	SequenceNumber string
+	TrackingIds    []TrackingID
+	Label          Label
+}
+
+type TrackingID struct {
+	TrackingIdType string
+	TrackingNumber string
+}
+
+type Name struct {
+	Type     string
+	Encoding string
+	Value    string
+}
+
+type ServiceDescription struct {
+	ServiceType      string
+	Code             string
+	Names            []Name
+	Description      string
+	AstraDescription string
+}
+
+type Surcharge struct {
+	SurchargeType string
+	Level         string
+	Description   string
+	Amount        Charge
+}
+
+type OperationalDetail struct {
+	OriginLocationNumber            string
+	DestinationLocationNumber       string
+	TransitTime                     string
+	IneligibleForMoneyBackGuarantee string
+	DeliveryEligibilities           string
+	ServiceCode                     string
+	PackagingCode                   string
+}
+
+type Rating struct {
+	ActualRateType       string
+	EffectiveNetDiscount Charge
+	ShipmentRateDetails  []RateDetail
+}
+
+type Charge struct {
+	Currency string
+	Amount   string
+}
+
+type RateDetail struct {
+	RateType                         string
+	RateZone                         string
+	RatedWeightMethod                string
+	DimDivisor                       string
+	FuelSurchargePercent             string
+	TotalBillingWeight               Weight
+	TotalBaseCharge                  Charge
+	TotalFreightDiscounts            Charge
+	TotalNetFreight                  Charge
+	TotalSurcharges                  Charge
+	TotalNetFedExCharge              Charge
+	TotalTaxes                       Charge
+	TotalNetCharge                   Charge
+	TotalRebates                     Charge
+	TotalDutiesAndTaxes              Charge
+	TotalAncillaryFeesAndTaxes       Charge
+	TotalDutiesTaxesAndFees          Charge
+	TotalNetChargeWithDutiesAndTaxes Charge
+	Surcharges                       []Surcharge
 }
 
 type Version struct {
@@ -48,8 +165,8 @@ type TrackDetail struct {
 	SpecialHandlings                       []SpecialHandling
 	ShipTimestamp                          string
 	ActualDeliveryTimestamp                string
-	DestinationAddress                     Location
-	ActualDeliveryAddress                  Location
+	DestinationAddress                     Address
+	ActualDeliveryAddress                  Address
 	DeliveryLocationType                   string
 	DeliveryLocationDescription            string
 	DeliveryAttempts                       int
@@ -63,7 +180,7 @@ type TrackDetail struct {
 type Notification struct {
 	Severity         string
 	Source           string
-	Code             int
+	Code             string
 	Message          string
 	LocalizedMessage string
 }
@@ -72,14 +189,15 @@ type StatusDetail struct {
 	CreationTime     string
 	Code             string
 	Description      string
-	Location         Location
+	Location         Address
 	AncillaryDetails []AncillaryDetail
 }
 
-type Location struct {
-	StreetLines         string
+type Address struct {
+	StreetLines         []string
 	City                string
 	StateOrProvinceCode string
+	PostalCode          string
 	CountryCode         string
 	CountryName         string
 	Residential         bool
@@ -122,6 +240,13 @@ type Event struct {
 	EventDescription           string
 	StatusExceptionCode        string
 	StatusExceptionDescription string
-	Address                    Location
+	Address                    Address
 	ArrivalLocation            string
+}
+
+type Contact struct {
+	PersonName   string
+	CompanyName  string
+	PhoneNumber  string
+	EMailAddress string
 }

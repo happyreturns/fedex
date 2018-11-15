@@ -30,17 +30,17 @@ type Fedex struct {
 	FedexUrl                      string
 }
 
-func (f Fedex) wrapSoapRequest(body string) string {
+func (f Fedex) wrapSoapRequest(body string, namespace string) string {
 	return fmt.Sprintf(`
-		<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:q0="http://fedex.com/ws/track/v16">
+		<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:q0="%s">
 		<soapenv:Body>
 			%s
 		</soapenv:Body>
 		</soapenv:Envelope>
-	`, body)
+	`, namespace, body)
 }
 
-func (f Fedex) soapCreds() string {
+func (f Fedex) soapCreds(serviceID, majorVersion string) string {
 	return fmt.Sprintf(`
 		<q0:WebAuthenticationDetail>
 			<q0:UserCredential>
@@ -53,12 +53,12 @@ func (f Fedex) soapCreds() string {
 			<q0:MeterNumber>%s</q0:MeterNumber>
 		</q0:ClientDetail>
 		<q0:Version>
-			<q0:ServiceId>trck</q0:ServiceId>
-			<q0:Major>16</q0:Major>
+			<q0:ServiceId>%s</q0:ServiceId>
+			<q0:Major>%s</q0:Major>
 			<q0:Intermediate>0</q0:Intermediate>
 			<q0:Minor>0</q0:Minor>
 		</q0:Version>
-	`, f.Key, f.Password, f.Account, f.Meter)
+	`, f.Key, f.Password, f.Account, f.Meter, serviceID, majorVersion)
 }
 
 // TrackByNumber : Returns tracking info for a specific Fedex tracking number
@@ -97,10 +97,28 @@ func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
 	return f.ParseTrackReply(content)
 }
 
+// ShipGround : Makes a FedEx Ground shipment
+func (f Fedex) ShipGround(fromAddress Address, toAddress Address, fromContact Contact, toContact Contact) (reply ProcessShipmentReply, err error) {
+	reqXML := soapShipGround(f, fromAddress, toAddress, fromContact, toContact)
+	content, err := f.PostXml(f.FedexUrl+"/ship/v23", reqXML)
+	if err != nil {
+		return reply, err
+	}
+	return f.ParseProcessShipmentReply(content)
+}
+
 // Unmarshal XML SOAP response into a TrackReply
 func (f Fedex) ParseTrackReply(xmlResp []byte) (reply TrackReply, err error) {
 	data := struct {
 		Reply TrackReply `xml:"Body>TrackReply"`
+	}{}
+	err = xml.Unmarshal(xmlResp, &data)
+	return data.Reply, err
+}
+
+func (f Fedex) ParseProcessShipmentReply(xmlResp []byte) (reply ProcessShipmentReply, err error) {
+	data := struct {
+		Reply ProcessShipmentReply `xml:"Body>ProcessShipmentReply"`
 	}{}
 	err = xml.Unmarshal(xmlResp, &data)
 	return data.Reply, err

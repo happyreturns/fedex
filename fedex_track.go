@@ -14,7 +14,7 @@ func trackRequest(fedex Fedex, body string) string {
 			%s
 			<q0:ProcessingOptions>INCLUDE_DETAILED_SCANS</q0:ProcessingOptions>
 		</q0:TrackRequest>
-	`, fedex.soapCreds(), body))
+	`, fedex.soapCreds("trck", "16"), body), "http://fedex.com/ws/track/v16")
 }
 
 func soapNumberTracking(fedex Fedex, carrierCode string, trackingNo string) string {
