@@ -4,6 +4,8 @@ package fedex
 
 import (
 	"log"
+
+	"github.com/happyreturns/fedex/models"
 )
 
 // Examples
@@ -50,7 +52,7 @@ func trackByPo(fedex Fedex, po string, postalCode string, countryCode string) {
 }
 
 // Dump : Dumps some of the query resuts for testing
-func Dump(reply TrackReply) {
+func Dump(reply models.TrackReply) {
 	log.Print(reply)
 	// Dummy example of using the data
 	log.Printf("Successs : %t", !reply.Failed())

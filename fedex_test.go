@@ -2,6 +2,8 @@ package fedex
 
 import (
 	"testing"
+
+	"github.com/happyreturns/fedex/models"
 )
 
 var f Fedex = Fedex{
@@ -27,7 +29,7 @@ func TestTrack(t *testing.T) {
 		reply.Notifications[0].Code != "0" ||
 		reply.Notifications[0].Message != "Request was successfully processed." ||
 		reply.Notifications[0].LocalizedMessage != "Request was successfully processed." ||
-		reply.Version.ServiceId != "trck" ||
+		reply.Version.ServiceID != "trck" ||
 		reply.Version.Major != 16 ||
 		reply.Version.Intermediate != 0 ||
 		reply.Version.Minor != 0 ||
@@ -45,26 +47,26 @@ func TestTrack(t *testing.T) {
 }
 
 func TestShipGround(t *testing.T) {
-	reply, err := f.ShipGround(Address{
+	reply, err := f.ShipGround(models.Address{
 		StreetLines:         []string{"1511 15th Street", "#205"},
 		City:                "Santa Monica",
 		StateOrProvinceCode: "CA",
 		PostalCode:          "90404",
 		CountryCode:         "US",
-	}, Address{
+	}, models.Address{
 		StreetLines:         []string{"1106 Broadway"},
 		City:                "Santa Monica",
 		StateOrProvinceCode: "CA",
 		PostalCode:          "90401",
 		CountryCode:         "US",
-	}, Contact{
+	}, models.Contact{
 		PersonName:   "Joachim Valdez",
 		PhoneNumber:  "213 867 5309",
-		EMailAddress: "joachim@happyreturns.com",
-	}, Contact{
+		EmailAddress: "joachim@happyreturns.com",
+	}, models.Contact{
 		CompanyName:  "Happy Returns",
 		PhoneNumber:  "424 325 9510",
-		EMailAddress: "joachim@happyreturns.com",
+		EmailAddress: "joachim@happyreturns.com",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -80,7 +82,7 @@ func TestShipGround(t *testing.T) {
 		reply.Notifications[0].Code != "0000" ||
 		reply.Notifications[0].Message != "Success" ||
 		reply.Notifications[0].LocalizedMessage != "Success" ||
-		reply.Version.ServiceId != "ship" ||
+		reply.Version.ServiceID != "ship" ||
 		reply.Version.Major != 23 ||
 		reply.Version.Intermediate != 0 ||
 		reply.Version.Minor != 0 ||

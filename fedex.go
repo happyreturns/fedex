@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/happyreturns/fedex/models"
 )
 
 const (
@@ -62,20 +64,32 @@ func (f Fedex) soapCreds(serviceID, majorVersion string) string {
 }
 
 // TrackByNumber : Returns tracking info for a specific Fedex tracking number
-func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply TrackReply, err error) {
-	reqXml := soapNumberTracking(f, carrierCode, trackingNo)
-	content, err := f.PostXml(f.FedexUrl+"/trck", reqXml)
+func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply models.TrackReply, err error) {
+	// Create request body
+	reqXML, err := xml.Marshal(soapNumberTracking(f, carrierCode, trackingNo))
 	if err != nil {
-		return reply, err
+		return reply, fmt.Errorf("marshal request xml: %s", err)
 	}
-	return f.ParseTrackReply(content)
+
+	// Post XML
+	content, err := f.PostXml(f.FedexUrl+"/trck", string(reqXML))
+	if err != nil {
+		return reply, fmt.Errorf("post xml: %s", err)
+	}
+
+	// Parse response
+	reply, err = f.ParseTrackReply(content)
+	if err != nil {
+		return reply, fmt.Errorf("parse xml: %s", err)
+	}
+	return reply, nil
 }
 
 // TrackByShipperRef : Return tracking info for a specific shipper reference
 // ShipperRef is usually an order ID or other unique identifier
 // ShipperAccountNumber is the Fedex account number of the shipper
 func (f Fedex) TrackByShipperRef(carrierCode string, shipperRef string,
-	shipperAccountNumber string) (reply TrackReply, err error) {
+	shipperAccountNumber string) (reply models.TrackReply, err error) {
 	reqXml := soapRefTracking(f, carrierCode, shipperRef, shipperAccountNumber)
 	content, err := f.PostXml(f.FedexUrl+"/trck", reqXml)
 	if err != nil {
@@ -88,7 +102,7 @@ func (f Fedex) TrackByShipperRef(carrierCode string, shipperRef string,
 // Note that Fedex requires the Destination Postal Code & country
 //   to match when making PO queries
 func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
-	countryCode string) (reply TrackReply, err error) {
+	countryCode string) (reply models.TrackReply, err error) {
 	reqXml := soapPoTracking(f, carrierCode, po, postalCode, countryCode)
 	content, err := f.PostXml(f.FedexUrl+"/trck", reqXml)
 	if err != nil {
@@ -97,28 +111,39 @@ func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
 	return f.ParseTrackReply(content)
 }
 
-// ShipGround : Makes a FedEx Ground shipment
-func (f Fedex) ShipGround(fromAddress Address, toAddress Address, fromContact Contact, toContact Contact) (reply ProcessShipmentReply, err error) {
-	reqXML := soapShipGround(f, fromAddress, toAddress, fromContact, toContact)
-	content, err := f.PostXml(f.FedexUrl+"/ship/v23", reqXML)
+func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (reply models.ProcessShipmentReply, err error) {
+	// Create request body
+	reqXML, err := xml.Marshal(soapShipGround(f, fromAddress, toAddress, fromContact, toContact))
 	if err != nil {
-		return reply, err
+		return reply, fmt.Errorf("marshal request xml: %s", err)
 	}
-	return f.ParseProcessShipmentReply(content)
+
+	// Post XML
+	content, err := f.PostXml(f.FedexUrl+"/ship/v23", string(reqXML))
+	if err != nil {
+		return reply, fmt.Errorf("post xml: %s", err)
+	}
+
+	// Parse response
+	reply, err = f.ParseProcessShipmentReply(content)
+	if err != nil {
+		return reply, fmt.Errorf("parse xml: %s", err)
+	}
+	return reply, nil
 }
 
 // Unmarshal XML SOAP response into a TrackReply
-func (f Fedex) ParseTrackReply(xmlResp []byte) (reply TrackReply, err error) {
+func (f Fedex) ParseTrackReply(xmlResp []byte) (reply models.TrackReply, err error) {
 	data := struct {
-		Reply TrackReply `xml:"Body>TrackReply"`
+		Reply models.TrackReply `xml:"Body>TrackReply"`
 	}{}
 	err = xml.Unmarshal(xmlResp, &data)
 	return data.Reply, err
 }
 
-func (f Fedex) ParseProcessShipmentReply(xmlResp []byte) (reply ProcessShipmentReply, err error) {
+func (f Fedex) ParseProcessShipmentReply(xmlResp []byte) (reply models.ProcessShipmentReply, err error) {
 	data := struct {
-		Reply ProcessShipmentReply `xml:"Body>ProcessShipmentReply"`
+		Reply models.ProcessShipmentReply `xml:"Body>ProcessShipmentReply"`
 	}{}
 	err = xml.Unmarshal(xmlResp, &data)
 	return data.Reply, err
