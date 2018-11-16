@@ -12,7 +12,7 @@ import (
 func main() {
 	// You will need to fill in all those with your actual Fedex web service data
 	fedex := Fedex{
-		FedexUrl: FEDEX_API_TEST_URL, // OR FEDEX_API_URL
+		FedexURL: FedexAPITestURL, // OR FedexAPIURL
 		Key:      "replaceWithYourKey",
 		Password: "replaceWithYourPass",
 		Account:  "replaceWithYourAccount",

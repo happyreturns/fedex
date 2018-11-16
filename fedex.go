@@ -15,8 +15,8 @@ import (
 
 const (
 	// Convenience constants for standard Fedex API url's
-	FEDEX_API_URL             = "https://ws.fedex.com:443/web-services"
-	FEDEX_API_TEST_URL        = "https://wsbeta.fedex.com:443/web-services"
+	FedexAPIURL               = "https://ws.fedex.com:443/web-services"
+	FedexAPITestURL           = "https://wsbeta.fedex.com:443/web-services"
 	CarrierCodeExpress        = "FDXE"
 	CarrierCodeGround         = "FDXG"
 	CarrierCodeFreight        = "FXFR"
@@ -29,7 +29,7 @@ const (
 // Fedex WSDL docs here: http://images.fedex.com/us/developer/product/WebServices/MyWebHelp/DeveloperGuide2012.pdf
 type Fedex struct {
 	Key, Password, Account, Meter string
-	FedexUrl                      string
+	FedexURL                      string
 }
 
 func (f Fedex) wrapSoapRequest(body string, namespace string) string {
@@ -72,7 +72,7 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply model
 	}
 
 	// Post XML
-	content, err := f.PostXml(f.FedexUrl+"/trck", string(reqXML))
+	content, err := f.PostXml(f.FedexURL+"/trck", string(reqXML))
 	if err != nil {
 		return reply, fmt.Errorf("post xml: %s", err)
 	}
@@ -90,8 +90,8 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply model
 // ShipperAccountNumber is the Fedex account number of the shipper
 func (f Fedex) TrackByShipperRef(carrierCode string, shipperRef string,
 	shipperAccountNumber string) (reply models.TrackReply, err error) {
-	reqXml := soapRefTracking(f, carrierCode, shipperRef, shipperAccountNumber)
-	content, err := f.PostXml(f.FedexUrl+"/trck", reqXml)
+	reqXML := soapRefTracking(f, carrierCode, shipperRef, shipperAccountNumber)
+	content, err := f.PostXml(f.FedexURL+"/trck", reqXML)
 	if err != nil {
 		return reply, err
 	}
@@ -103,8 +103,8 @@ func (f Fedex) TrackByShipperRef(carrierCode string, shipperRef string,
 //   to match when making PO queries
 func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
 	countryCode string) (reply models.TrackReply, err error) {
-	reqXml := soapPoTracking(f, carrierCode, po, postalCode, countryCode)
-	content, err := f.PostXml(f.FedexUrl+"/trck", reqXml)
+	reqXML := soapPoTracking(f, carrierCode, po, postalCode, countryCode)
+	content, err := f.PostXml(f.FedexURL+"/trck", reqXML)
 	if err != nil {
 		return reply, err
 	}
@@ -119,7 +119,7 @@ func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, 
 	}
 
 	// Post XML
-	content, err := f.PostXml(f.FedexUrl+"/ship/v23", string(reqXML))
+	content, err := f.PostXml(f.FedexURL+"/ship/v23", string(reqXML))
 	if err != nil {
 		return reply, fmt.Errorf("post xml: %s", err)
 	}

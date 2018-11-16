@@ -11,7 +11,7 @@ var f Fedex = Fedex{
 	Password: "A4dpGK2dPW4P2sSba9suwOCpo",
 	Account:  "510087780",
 	Meter:    "119090332",
-	FedexUrl: FEDEX_API_TEST_URL,
+	FedexURL: FedexAPITestURL,
 }
 
 func TestTrack(t *testing.T) {
