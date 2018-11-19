@@ -43,7 +43,72 @@ func TestTrack(t *testing.T) {
 		reply.CompletedTrackDetails[0].TrackDetails[0].CarrierCode != "FDXE" {
 		t.Fatal("output not correct")
 	}
+}
 
+func TestRate(t *testing.T) {
+	reply, err := f.Rate(models.Address{
+		StreetLines:         []string{"1511 15th Street", "#205"},
+		City:                "Santa Monica",
+		StateOrProvinceCode: "CA",
+		PostalCode:          "90404",
+		CountryCode:         "US",
+	}, models.Address{
+		StreetLines:         []string{"1106 Broadway"},
+		City:                "Santa Monica",
+		StateOrProvinceCode: "CA",
+		PostalCode:          "90401",
+		CountryCode:         "US",
+	}, models.Contact{
+		PersonName:   "Joachim Valdez",
+		PhoneNumber:  "213 867 5309",
+		EmailAddress: "joachim@happyreturns.com",
+	}, models.Contact{
+		CompanyName:  "Happy Returns",
+		PhoneNumber:  "424 325 9510",
+		EmailAddress: "joachim@happyreturns.com",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reply.Failed() {
+		t.Fatal("reply should not have failed")
+	}
+	if reply.HighestSeverity != "SUCCESS" ||
+		// Basic validation
+		len(reply.Notifications) != 1 ||
+		reply.Notifications[0].Source != "crs" ||
+		reply.Notifications[0].Code != "0" ||
+		reply.Version.ServiceID != "crs" ||
+		reply.Version.Major != 24 ||
+		reply.Version.Intermediate != 0 ||
+		reply.Version.Minor != 0 ||
+		len(reply.RateReplyDetails) != 1 ||
+		reply.RateReplyDetails[0].ServiceType != "FEDEX_GROUND" ||
+		reply.RateReplyDetails[0].ServiceDescription.ServiceType != "FEDEX_GROUND" ||
+		reply.RateReplyDetails[0].ServiceDescription.Code != "92" ||
+		reply.RateReplyDetails[0].ServiceDescription.AstraDescription != "FXG" ||
+		reply.RateReplyDetails[0].PackagingType != "YOUR_PACKAGING" ||
+		reply.RateReplyDetails[0].DestinationAirportID != "YOUR_PACKAGING" ||
+		reply.RateReplyDetails[0].IneligibleForMoneyBackGuarantee ||
+		reply.RateReplyDetails[0].SignatureOption != "SERVICE_DEFAULT" ||
+		reply.RateReplyDetails[0].ActualRateType != "PAYOR_ACCOUNT_PACKAGE" ||
+		len(reply.RateReplyDetails[0].RatedShipmentDetails) != 2 ||
+		reply.RateReplyDetails[0].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
+		len(reply.RateReplyDetails[0].RatedShipmentDetails[0].RatedPackages) != 1 ||
+		reply.RateReplyDetails[0].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
+
+		len(reply.RateReplyDetails[1].RatedShipmentDetails) != 2 ||
+		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
+		len(reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages) != 1 ||
+		reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
+
+		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
+		len(reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages) != 1 ||
+		reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
+		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" {
+		t.Fatal("output not correct")
+	}
 }
 
 func TestShipGround(t *testing.T) {
@@ -86,7 +151,7 @@ func TestShipGround(t *testing.T) {
 		reply.Version.Major != 23 ||
 		reply.Version.Intermediate != 0 ||
 		reply.Version.Minor != 0 ||
-		reply.JobId == "" ||
+		reply.JobID == "" ||
 		reply.CompletedShipmentDetail.UsDomestic != "true" ||
 		reply.CompletedShipmentDetail.CarrierCode != "FDXG" ||
 		reply.CompletedShipmentDetail.MasterTrackingId.TrackingIdType != "FEDEX" ||

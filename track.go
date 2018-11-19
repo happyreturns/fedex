@@ -19,7 +19,7 @@ func trackRequest(fedex Fedex, body string) string {
 	`, fedex.soapCreds("trck", "16"), body), "http://fedex.com/ws/track/v16")
 }
 
-func soapNumberTracking(fedex Fedex, carrierCode string, trackingNo string) models.Envelope {
+func trackByNumberSOAPRequest(fedex Fedex, carrierCode string, trackingNo string) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",

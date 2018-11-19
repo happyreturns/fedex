@@ -31,6 +31,11 @@ type UserCredential struct {
 	Password string `xml:"q0:Password"`
 }
 
+type RateRequest struct {
+	Request
+	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`
+}
+
 type TrackRequest struct {
 	Request
 	SelectionDetails  SelectionDetails `xml:"q0:SelectionDetails"`
@@ -70,7 +75,7 @@ type RequestedShipment struct {
 	Shipper   Shipper `xml:"q0:Shipper"`
 	Recipient Shipper `xml:"q0:Recipient"`
 
-	ShippingChargesPayment    ShippingChargesPayment     `xml:"q0:ShippingChargesPayment"`
+	ShippingChargesPayment    Payment                    `xml:"q0:ShippingChargesPayment"`
 	LabelSpecification        LabelSpecification         `xml:"q0:LabelSpecification"`
 	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
 	PackageCount              int                        `xml:"q0:PackageCount"`
@@ -79,6 +84,7 @@ type RequestedShipment struct {
 
 type RequestedPackageLineItem struct {
 	SequenceNumber     int                 `xml:"q0:SequenceNumber"`
+	GroupPackageCount  int                 `xml:"q0:GroupPackageCount,omitempty"`
 	Weight             Weight              `xml:"q0:Weight"`
 	Dimensions         Dimensions          `xml:"q0:Dimensions"`
 	PhysicalPackaging  string              `xml:"q0:PhysicalPackaging"`
@@ -110,7 +116,7 @@ type Dimensions struct {
 	Units  string `xml:"q0:Units"`
 }
 
-type ShippingChargesPayment struct {
+type Payment struct {
 	PaymentType string `xml:"q0:PaymentType"`
 	Payor       Payor  `xml:"q0:Payor"`
 }
@@ -134,11 +140,12 @@ type Shipper struct {
 	Address       Address `xml:"q0:Address"`
 }
 
-// Reply has just the
+// Reply has common stuff on all responses from FedEx API
 type Reply struct {
 	HighestSeverity string
 	Notifications   []Notification
 	Version         VersionResponse
+	JobID           string `xml:"JobId"`
 }
 
 func (r Reply) Failed() bool {
@@ -154,13 +161,30 @@ type TrackReply struct {
 // ProcessShipReply : Process shipment reply root (`xml:"Body>ProcessShipmentReply"`)
 type ProcessShipmentReply struct {
 	Reply
-	JobId                   string
 	TransactionDetail       TransactionDetail
 	CompletedShipmentDetail CompletedShipmentDetail
 }
 
+// RateReply : Process shipment reply root (`xml:"Body>RateReply"`)
+type RateReply struct {
+	Reply
+	TransactionDetail TransactionDetail
+	RateReplyDetails  []RateReplyDetail
+}
+
+type RateReplyDetail struct {
+	ServiceType                     string
+	ServiceDescription              ServiceDescription
+	PackagingType                   string
+	DestinationAirportID            string `xml:"DestinationAirportId"`
+	IneligibleForMoneyBackGuarantee bool
+	SignatureOption                 string
+	ActualRateType                  string
+	RatedShipmentDetails            []Rating // TODO
+}
+
 type TransactionDetail struct {
-	CustomerTransactionId string
+	CustomerTransactionID string `xml:"q0:CustomerTransactionId,omitempty"`
 }
 
 type CompletedShipmentDetail struct {
@@ -231,15 +255,29 @@ type OperationalDetail struct {
 	PackagingCode                   string
 }
 
+type RatedShipmentDetail struct {
+	EffectiveNetDiscount Charge
+	ShipmentRateDetail   RateDetail
+	RatedPackages        []RatedPackage
+}
+
 type Rating struct {
 	ActualRateType       string
+	GroupNumber          string
 	EffectiveNetDiscount Charge
 	ShipmentRateDetails  []RateDetail
+	RatedPackages        []RatedPackage
 }
 
 type Charge struct {
 	Currency string
 	Amount   string
+}
+
+type RatedPackage struct {
+	GroupNumber          string
+	EffectiveNetDiscount Charge
+	PackageRateDetail    RateDetail
 }
 
 type RateDetail struct {
@@ -256,6 +294,7 @@ type RateDetail struct {
 	TotalNetFedExCharge              Charge
 	TotalTaxes                       Charge
 	TotalNetCharge                   Charge
+	NetCharge                        Charge
 	TotalRebates                     Charge
 	TotalDutiesAndTaxes              Charge
 	TotalAncillaryFeesAndTaxes       Charge

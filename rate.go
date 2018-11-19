@@ -6,14 +6,14 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-func shipGroundSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
+func rateSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/ship/v23",
+		Namespace: "http://fedex.com/ws/rate/v24",
 		Body: struct {
-			ProcessShipmentRequest models.ProcessShipmentRequest `xml:"q0:ProcessShipmentRequest"`
+			RateRequest models.RateRequest `xml:"q0:RateRequest"`
 		}{
-			ProcessShipmentRequest: models.ProcessShipmentRequest{
+			RateRequest: models.RateRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{
 						UserCredential: models.UserCredential{
@@ -26,8 +26,8 @@ func shipGroundSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address,
 						MeterNumber:   fedex.Meter,
 					},
 					Version: models.Version{
-						ServiceID: "ship",
-						Major:     23,
+						ServiceID: "crs",
+						Major:     24,
 					},
 				},
 				RequestedShipment: models.RequestedShipment{
@@ -61,7 +61,8 @@ func shipGroundSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address,
 					PackageCount:     1,
 					RequestedPackageLineItems: []models.RequestedPackageLineItem{
 						{
-							SequenceNumber: 1,
+							SequenceNumber:    1,
+							GroupPackageCount: 1,
 							Weight: models.Weight{
 								Units: "LB",
 								Value: 40,
