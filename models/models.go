@@ -14,8 +14,8 @@ type Envelope struct {
 type Request struct {
 	WebAuthenticationDetail WebAuthenticationDetail `xml:"q0:WebAuthenticationDetail"`
 	ClientDetail            ClientDetail            `xml:"q0:ClientDetail"`
-	TransitionDetail        *TransactionDetail      `xml:"q0:TransitionDetail,omitempty"`
-	Version                 Version                 `xml:"q0:Version"`
+	// TransitionDetail        *TransactionDetail      `xml:"q0:TransitionDetail,omitempty"`
+	Version Version `xml:"q0:Version"`
 }
 
 type WebAuthenticationDetail struct {
@@ -78,6 +78,12 @@ type RequestedShipment struct {
 	ServiceType   string    `xml:"q0:ServiceType"`
 	PackagingType string    `xml:"q0:PackagingType"`
 
+	// ShipmentManifestDetail      *ShipmentManifestDetail      `xml:"q0:ShipmentManifestDetail,omitempty"`
+	// TotalWeight                 *Weight                      `xml:"q0:TotalWeight,omitempty"`
+	// TotalInsuredValue           *Money                       `xml:"q0:TotalInsuredValue,omitempty"`
+	// PreferredCurrency           string                       `xml:"q0:PreferredCurrency,omitempty"`
+	// ShipmentAuthorizationDetail *ShipmentAuthorizationDetail `xml:"q0:ShipmentAuthorizationDetail,omitempty"`
+
 	Shipper   Shipper `xml:"q0:Shipper"`
 	Recipient Shipper `xml:"q0:Recipient"`
 
@@ -87,6 +93,10 @@ type RequestedShipment struct {
 	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
 	PackageCount              int                        `xml:"q0:PackageCount"`
 	RequestedPackageLineItems []RequestedPackageLineItem `xml:"q0:RequestedPackageLineItems"`
+}
+
+type ShipmentManifestDetail struct {
+	ManifestReferenceType string `xml:"q0:ManifestReferenceType,omitempty"`
 }
 
 type SmartPostDetail struct {

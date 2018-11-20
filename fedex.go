@@ -78,7 +78,7 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply model
 	}
 
 	// Parse response
-	reply, err = f.ParseTrackReply(content)
+	reply, err = f.parseTrackReply(content)
 	if err != nil {
 		return reply, fmt.Errorf("parse xml: %s", err)
 	}
@@ -95,7 +95,7 @@ func (f Fedex) TrackByShipperRef(carrierCode string, shipperRef string,
 	if err != nil {
 		return reply, err
 	}
-	return f.ParseTrackReply(content)
+	return f.parseTrackReply(content)
 }
 
 // TrackByPo : Returns tracking info for a specific Purchase Order (often the OrderId)
@@ -108,7 +108,7 @@ func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
 	if err != nil {
 		return reply, err
 	}
-	return f.ParseTrackReply(content)
+	return f.parseTrackReply(content)
 }
 
 func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (reply models.ProcessShipmentReply, err error) {
@@ -125,7 +125,7 @@ func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, 
 	}
 
 	// Parse response
-	reply, err = f.ParseProcessShipmentReply(content)
+	reply, err = f.parseProcessShipmentReply(content)
 	if err != nil {
 		return reply, fmt.Errorf("parse xml: %s", err)
 	}
@@ -146,7 +146,7 @@ func (f Fedex) ShipSmartPost(fromAddress models.Address, toAddress models.Addres
 	}
 
 	// Parse response
-	reply, err = f.ParseProcessShipmentReply(content)
+	reply, err = f.parseProcessShipmentReply(content)
 	if err != nil {
 		return reply, fmt.Errorf("parse xml: %s", err)
 	}
@@ -168,7 +168,7 @@ func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address, fromCo
 	}
 
 	// Parse response
-	reply, err = f.ParseRateReply(content)
+	reply, err = f.parseRateReply(content)
 	if err != nil {
 		return reply, fmt.Errorf("parse xml: %s", err)
 	}
@@ -200,7 +200,7 @@ func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address, fromCo
 // }
 
 // Unmarshal XML SOAP response into a TrackReply
-func (f Fedex) ParseTrackReply(xmlResp []byte) (reply models.TrackReply, err error) {
+func (f Fedex) parseTrackReply(xmlResp []byte) (reply models.TrackReply, err error) {
 	data := struct {
 		Reply models.TrackReply `xml:"Body>TrackReply"`
 	}{}
@@ -208,7 +208,7 @@ func (f Fedex) ParseTrackReply(xmlResp []byte) (reply models.TrackReply, err err
 	return data.Reply, err
 }
 
-func (f Fedex) ParseProcessShipmentReply(xmlResp []byte) (reply models.ProcessShipmentReply, err error) {
+func (f Fedex) parseProcessShipmentReply(xmlResp []byte) (reply models.ProcessShipmentReply, err error) {
 	data := struct {
 		Reply models.ProcessShipmentReply `xml:"Body>ProcessShipmentReply"`
 	}{}
@@ -216,7 +216,7 @@ func (f Fedex) ParseProcessShipmentReply(xmlResp []byte) (reply models.ProcessSh
 	return data.Reply, err
 }
 
-func (f Fedex) ParseRateReply(xmlResp []byte) (reply models.RateReply, err error) {
+func (f Fedex) parseRateReply(xmlResp []byte) (reply models.RateReply, err error) {
 	data := struct {
 		Reply models.RateReply `xml:"Body>RateReply"`
 	}{}
