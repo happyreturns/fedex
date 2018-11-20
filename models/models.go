@@ -10,6 +10,18 @@ type Envelope struct {
 	Namespace string      `xml:"xmlns:q0,attr"`
 }
 
+type TrackResponseEnvelope struct {
+	Reply TrackReply `xml:"Body>TrackReply"`
+}
+
+type ShipResponseEnvelope struct {
+	Reply ProcessShipmentReply `xml:"Body>ProcessShipmentReply"`
+}
+
+type RateResponseEnvelope struct {
+	Reply RateReply `xml:"Body>RateReply"`
+}
+
 // Request has just the default auth fields on all requests
 type Request struct {
 	WebAuthenticationDetail WebAuthenticationDetail `xml:"q0:WebAuthenticationDetail"`

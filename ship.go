@@ -117,7 +117,6 @@ func (f Fedex) shipGroundSOAPRequest(fromLocation, toLocation models.Address, fr
 	return f.shipmentEnvelope("FEDEX_GROUND", fromLocation, toLocation, fromContact, toContact)
 }
 
-// This should be on Fedex object
 func (f Fedex) shipSmartPostSOAPRequest(fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
 	return f.shipmentEnvelope("SMART_POST", fromLocation, toLocation, fromContact, toContact)
 }

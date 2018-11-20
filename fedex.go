@@ -64,25 +64,26 @@ func (f Fedex) soapCreds(serviceID, majorVersion string) string {
 }
 
 // TrackByNumber : Returns tracking info for a specific Fedex tracking number
-func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (reply models.TrackReply, err error) {
+func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.TrackReply, error) {
 	// Create request body
 	reqXML, err := xml.Marshal(f.trackByNumberSOAPRequest(carrierCode, trackingNo))
 	if err != nil {
-		return reply, fmt.Errorf("marshal request xml: %s", err)
+		return nil, fmt.Errorf("marshal request xml: %s", err)
 	}
 
 	// Post XML
 	content, err := f.PostXML(f.FedexURL+"/trck", string(reqXML))
 	if err != nil {
-		return reply, fmt.Errorf("post xml: %s", err)
+		return nil, fmt.Errorf("post xml: %s", err)
 	}
 
 	// Parse response
-	reply, err = f.parseTrackReply(content)
+	data := models.TrackResponseEnvelope{}
+	err = xml.Unmarshal(content, &data)
 	if err != nil {
-		return reply, fmt.Errorf("parse xml: %s", err)
+		return nil, fmt.Errorf("parse xml: %s", err)
 	}
-	return reply, nil
+	return &data.Reply, nil
 }
 
 // TrackByShipperRef : Return tracking info for a specific shipper reference
@@ -111,92 +112,74 @@ func (f Fedex) TrackByPo(carrierCode string, po string, postalCode string,
 	return f.parseTrackReply(content)
 }
 
-func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (reply models.ProcessShipmentReply, err error) {
+func (f Fedex) ShipGround(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (*models.ProcessShipmentReply, error) {
 	// Create request body
 	reqXML, err := xml.Marshal(f.shipGroundSOAPRequest(fromAddress, toAddress, fromContact, toContact))
 	if err != nil {
-		return reply, fmt.Errorf("marshal request xml: %s", err)
+		return nil, fmt.Errorf("marshal request xml: %s", err)
 	}
 
 	// Post XML
 	content, err := f.PostXML(f.FedexURL+"/ship/v23", string(reqXML))
 	if err != nil {
-		return reply, fmt.Errorf("post xml: %s", err)
+		return nil, fmt.Errorf("post xml: %s", err)
 	}
 
 	// Parse response
-	reply, err = f.parseProcessShipmentReply(content)
+	reply, err := f.parseProcessShipmentReply(content)
 	if err != nil {
-		return reply, fmt.Errorf("parse xml: %s", err)
+		return nil, fmt.Errorf("parse xml: %s", err)
 	}
-	return reply, nil
+	return &reply, nil
 }
 
-func (f Fedex) ShipSmartPost(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (reply models.ProcessShipmentReply, err error) {
+func (f Fedex) ShipSmartPost(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (*models.ProcessShipmentReply, error) {
 	// Create request body
 	reqXML, err := xml.Marshal(f.shipSmartPostSOAPRequest(fromAddress, toAddress, fromContact, toContact))
 	if err != nil {
-		return reply, fmt.Errorf("marshal request xml: %s", err)
+		return nil, fmt.Errorf("marshal request xml: %s", err)
 	}
 
 	// Post XML
 	content, err := f.PostXML(f.FedexURL+"/ship/v23", string(reqXML))
 	if err != nil {
-		return reply, fmt.Errorf("post xml: %s", err)
+		return nil, fmt.Errorf("post xml: %s", err)
 	}
 
 	// Parse response
-	reply, err = f.parseProcessShipmentReply(content)
+	data := models.ShipResponseEnvelope{}
+	err = xml.Unmarshal(content, &data)
 	if err != nil {
-		return reply, fmt.Errorf("parse xml: %s", err)
+		return nil, fmt.Errorf("parse xml: %s", err)
 	}
-	return reply, nil
+	return &data.Reply, nil
 }
 
-func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (reply models.RateReply, err error) {
+func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address, fromContact models.Contact, toContact models.Contact) (*models.RateReply, error) {
 
 	// Create request body
 	reqXML, err := xml.Marshal(f.rateSOAPRequest(fromAddress, toAddress, fromContact, toContact))
 	if err != nil {
-		return reply, fmt.Errorf("marshal request xml: %s", err)
+		return nil, fmt.Errorf("marshal request xml: %s", err)
 	}
 
 	// Post XML
 	content, err := f.PostXML(f.FedexURL+"/rate/v24", string(reqXML))
 	if err != nil {
-		return reply, fmt.Errorf("post xml: %s", err)
+		return nil, fmt.Errorf("post xml: %s", err)
 	}
 
 	// Parse response
-	reply, err = f.parseRateReply(content)
+	data := models.RateResponseEnvelope{}
+	err = xml.Unmarshal(content, &data)
 	if err != nil {
-		return reply, fmt.Errorf("parse xml: %s", err)
+		return nil, fmt.Errorf("parse xml: %s", err)
 	}
-	return reply, nil
+	return &data.Reply, nil
 }
 
 // TODO
-// func (f Fedex) Pickup() (reply models.CreatePickupReply, err error) {
-// 	return nil, nil
-// // Create request body
-// reqXML, err := xml.Marshal(rateSOAPRequest(f, fromAddress, toAddress, fromContact, toContact))
-// if err != nil {
-// 	return reply, fmt.Errorf("marshal request xml: %s", err)
-// }
-//
-// // Post XML
-// content, err := f.PostXML(f.FedexURL+"/rate/v24", string(reqXML))
-// if err != nil {
-// 	return reply, fmt.Errorf("post xml: %s", err)
-// }
-// fmt.Println(string(content))
-//
-// // Parse response
-// reply, err = f.ParseRateReply(content)
-// if err != nil {
-// 	return reply, fmt.Errorf("parse xml: %s", err)
-// }
-// return reply, nil
+// func (f Fedex) Pickup() (reply *models.CreatePickupReply, error) {
 // }
 
 // Unmarshal XML SOAP response into a TrackReply

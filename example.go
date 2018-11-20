@@ -30,7 +30,7 @@ func trackByNumber(fedex Fedex, trackingNo string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	Dump(reply)
+	Dump(*reply)
 }
 
 // Looking up some tracking info by reference
