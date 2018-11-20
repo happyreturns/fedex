@@ -19,7 +19,7 @@ func trackRequest(fedex Fedex, body string) string {
 	`, fedex.soapCreds("trck", "16"), body), "http://fedex.com/ws/track/v16")
 }
 
-func trackByNumberSOAPRequest(fedex Fedex, carrierCode string, trackingNo string) models.Envelope {
+func (f Fedex) trackByNumberSOAPRequest(carrierCode string, trackingNo string) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",
@@ -30,13 +30,13 @@ func trackByNumberSOAPRequest(fedex Fedex, carrierCode string, trackingNo string
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{
 						UserCredential: models.UserCredential{
-							Key:      fedex.Key,
-							Password: fedex.Password,
+							Key:      f.Key,
+							Password: f.Password,
 						},
 					},
 					ClientDetail: models.ClientDetail{
-						AccountNumber: fedex.Account,
-						MeterNumber:   fedex.Meter,
+						AccountNumber: f.Account,
+						MeterNumber:   f.Meter,
 					},
 					Version: models.Version{
 						ServiceID: "trck",

@@ -6,7 +6,7 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-func rateSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
+func (f Fedex) rateSOAPRequest(fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/rate/v24",
@@ -17,13 +17,13 @@ func rateSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromC
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{
 						UserCredential: models.UserCredential{
-							Key:      fedex.Key,
-							Password: fedex.Password,
+							Key:      f.Key,
+							Password: f.Password,
 						},
 					},
 					ClientDetail: models.ClientDetail{
-						AccountNumber: fedex.Account,
-						MeterNumber:   fedex.Meter,
+						AccountNumber: f.Account,
+						MeterNumber:   f.Meter,
 					},
 					Version: models.Version{
 						ServiceID: "crs",
@@ -36,12 +36,12 @@ func rateSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromC
 					ServiceType:   "FEDEX_GROUND",
 					PackagingType: "YOUR_PACKAGING",
 					Shipper: models.Shipper{
-						AccountNumber: fedex.Account,
+						AccountNumber: f.Account,
 						Address:       fromLocation,
 						Contact:       fromContact,
 					},
 					Recipient: models.Shipper{
-						AccountNumber: fedex.Account,
+						AccountNumber: f.Account,
 						Address:       toLocation,
 						Contact:       toContact,
 					},
@@ -49,7 +49,7 @@ func rateSOAPRequest(fedex Fedex, fromLocation, toLocation models.Address, fromC
 						PaymentType: "SENDER",
 						Payor: models.Payor{
 							ResponsibleParty: models.ResponsibleParty{
-								AccountNumber: fedex.Account,
+								AccountNumber: f.Account,
 							},
 						},
 					},

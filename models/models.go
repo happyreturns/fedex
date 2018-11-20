@@ -14,6 +14,7 @@ type Envelope struct {
 type Request struct {
 	WebAuthenticationDetail WebAuthenticationDetail `xml:"q0:WebAuthenticationDetail"`
 	ClientDetail            ClientDetail            `xml:"q0:ClientDetail"`
+	TransitionDetail        *TransactionDetail      `xml:"q0:TransitionDetail,omitempty"`
 	Version                 Version                 `xml:"q0:Version"`
 }
 
@@ -40,6 +41,11 @@ type TrackRequest struct {
 	Request
 	SelectionDetails  SelectionDetails `xml:"q0:SelectionDetails"`
 	ProcessingOptions string           `xml:"q0:ProcessingOptions"`
+}
+
+type CreatePickupRequest struct {
+	Request
+	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`
 }
 
 type SelectionDetails struct {
@@ -76,12 +82,18 @@ type RequestedShipment struct {
 	Recipient Shipper `xml:"q0:Recipient"`
 
 	ShippingChargesPayment    Payment                    `xml:"q0:ShippingChargesPayment"`
+	SmartPostDetail           *SmartPostDetail           `xml:"q0:SmartPostDetail,omitempty"`
 	LabelSpecification        LabelSpecification         `xml:"q0:LabelSpecification"`
 	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
 	PackageCount              int                        `xml:"q0:PackageCount"`
 	RequestedPackageLineItems []RequestedPackageLineItem `xml:"q0:RequestedPackageLineItems"`
 }
 
+type SmartPostDetail struct {
+	Indicia              string `xml:"q0:Indicia"`
+	AncillaryEndorsement string `xml:"q0:AncillaryEndorsement"`
+	HubID                string `xml:"q0:HubId"`
+}
 type RequestedPackageLineItem struct {
 	SequenceNumber     int                 `xml:"q0:SequenceNumber"`
 	GroupPackageCount  int                 `xml:"q0:GroupPackageCount,omitempty"`
@@ -170,6 +182,14 @@ type RateReply struct {
 	Reply
 	TransactionDetail TransactionDetail
 	RateReplyDetails  []RateReplyDetail
+}
+
+// CreatePickupReply : CreatePickup reply root (`xml:"Body>CreatePickupReply"`)
+type CreatePickupReply struct {
+	Reply
+	PickupConfirmationNumber string
+	// TransactionDetail       TransactionDetail
+	// CompletedShipmentDetail CompletedShipmentDetail
 }
 
 type RateReplyDetail struct {

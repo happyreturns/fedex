@@ -7,11 +7,12 @@ import (
 )
 
 var f Fedex = Fedex{
-	Key:      "IfRnoRdbpEvBPbEn",
-	Password: "A4dpGK2dPW4P2sSba9suwOCpo",
-	Account:  "510087780",
-	Meter:    "119090332",
-	FedexURL: FedexAPITestURL,
+	Key:            "IfRnoRdbpEvBPbEn",
+	Password:       "A4dpGK2dPW4P2sSba9suwOCpo",
+	Account:        "510087780",
+	Meter:          "119090332",
+	FedexURL:       FedexAPITestURL,
+	SmartPostHubID: "5531",
 }
 
 func TestTrack(t *testing.T) {
@@ -89,24 +90,16 @@ func TestRate(t *testing.T) {
 		reply.RateReplyDetails[0].ServiceDescription.Code != "92" ||
 		reply.RateReplyDetails[0].ServiceDescription.AstraDescription != "FXG" ||
 		reply.RateReplyDetails[0].PackagingType != "YOUR_PACKAGING" ||
-		reply.RateReplyDetails[0].DestinationAirportID != "YOUR_PACKAGING" ||
+		reply.RateReplyDetails[0].DestinationAirportID != "LAX" ||
 		reply.RateReplyDetails[0].IneligibleForMoneyBackGuarantee ||
 		reply.RateReplyDetails[0].SignatureOption != "SERVICE_DEFAULT" ||
 		reply.RateReplyDetails[0].ActualRateType != "PAYOR_ACCOUNT_PACKAGE" ||
 		len(reply.RateReplyDetails[0].RatedShipmentDetails) != 2 ||
-		reply.RateReplyDetails[0].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
+		reply.RateReplyDetails[0].RatedShipmentDetails[0].EffectiveNetDiscount.Amount == "" ||
 		len(reply.RateReplyDetails[0].RatedShipmentDetails[0].RatedPackages) != 1 ||
-		reply.RateReplyDetails[0].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
-
-		len(reply.RateReplyDetails[1].RatedShipmentDetails) != 2 ||
-		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
-		len(reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages) != 1 ||
-		reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
-
-		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" ||
-		len(reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages) != 1 ||
-		reply.RateReplyDetails[1].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount != "0.0" ||
-		reply.RateReplyDetails[1].RatedShipmentDetails[0].EffectiveNetDiscount.Amount != "USD" {
+		reply.RateReplyDetails[0].RatedShipmentDetails[0].RatedPackages[0].PackageRateDetail.NetCharge.Amount == "0.0" ||
+		len(reply.RateReplyDetails[0].RatedShipmentDetails[1].RatedPackages) != 1 ||
+		reply.RateReplyDetails[0].RatedShipmentDetails[1].RatedPackages[0].PackageRateDetail.NetCharge.Amount == "0.0" {
 		t.Fatal("output not correct")
 	}
 }
@@ -180,6 +173,73 @@ func TestShipGround(t *testing.T) {
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type != "OUTBOUND_LABEL" ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PNG" ||
 
+		len(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts) != 1 ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts[0].Image == "" {
+		t.Fatal("output not correct")
+	}
+}
+
+func TestShipSmartPost(t *testing.T) {
+	reply, err := f.ShipSmartPost(models.Address{
+		StreetLines:         []string{"1511 15th Street", "#205"},
+		City:                "Santa Monica",
+		StateOrProvinceCode: "CA",
+		PostalCode:          "90404",
+		CountryCode:         "US",
+	}, models.Address{
+		StreetLines:         []string{"1106 Broadway"},
+		City:                "Santa Monica",
+		StateOrProvinceCode: "CA",
+		PostalCode:          "90401",
+		CountryCode:         "US",
+	}, models.Contact{
+		PersonName:   "Joachim Valdez",
+		PhoneNumber:  "213 867 5309",
+		EmailAddress: "joachim@happyreturns.com",
+	}, models.Contact{
+		CompanyName:  "Happy Returns",
+		PhoneNumber:  "424 325 9510",
+		EmailAddress: "joachim@happyreturns.com",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// if reply.Failed() {
+	// 	t.Fatal("reply should not have failed")
+	// }
+	if
+	// reply.HighestSeverity != "SUCCESS" ||
+	// Basic validation
+	len(reply.Notifications) != 1 ||
+		reply.Notifications[0].Source != "ship" ||
+		reply.Notifications[0].Code != "2505" ||
+		// reply.Notifications[0].Message != "Success" ||
+		// reply.Notifications[0].LocalizedMessage != "Success" ||
+		reply.Version.ServiceID != "ship" ||
+		reply.Version.Major != 23 ||
+		reply.Version.Intermediate != 0 ||
+		reply.Version.Minor != 0 ||
+		reply.JobID == "" ||
+		reply.CompletedShipmentDetail.UsDomestic != "true" ||
+		reply.CompletedShipmentDetail.CarrierCode != "FXSP" ||
+		reply.CompletedShipmentDetail.MasterTrackingId.TrackingIdType != "USPS" ||
+		reply.CompletedShipmentDetail.MasterTrackingId.TrackingNumber == "74811111114825875057" ||
+		reply.CompletedShipmentDetail.ServiceTypeDescription != "SMART POST" ||
+		reply.CompletedShipmentDetail.ServiceDescription.ServiceType != "SMART_POST" ||
+		// skip ServiceDescription.Names
+		reply.CompletedShipmentDetail.PackagingDescription != "YOUR_PACKAGING" ||
+		reply.CompletedShipmentDetail.OperationalDetail.TransitTime != "TWO_DAYS" ||
+		reply.CompletedShipmentDetail.OperationalDetail.IneligibleForMoneyBackGuarantee != "false" ||
+		reply.CompletedShipmentDetail.ShipmentRating.ActualRateType != "PAYOR_ACCOUNT_PACKAGE" ||
+		len(reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails) != 2 ||
+		// // skip most ShipmentRateDetails fields
+		reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails[0].RateType != "PAYOR_ACCOUNT_PACKAGE" ||
+		reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails[1].RateType != "PAYOR_LIST_PACKAGE" ||
+		len(reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds) != 1 ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds[0].TrackingIdType != "USPS" ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type != "OUTBOUND_LABEL" ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PNG" ||
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts[0].Image == "" {
 		t.Fatal("output not correct")
