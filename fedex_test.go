@@ -36,7 +36,7 @@ func TestTrack(t *testing.T) {
 		len(reply.CompletedTrackDetails) != 1 ||
 		!reply.CompletedTrackDetails[0].DuplicateWaybill ||
 		reply.CompletedTrackDetails[0].MoreData ||
-		len(reply.CompletedTrackDetails[0].TrackDetails) != 16 ||
+		len(reply.CompletedTrackDetails[0].TrackDetails) < 1 ||
 		reply.CompletedTrackDetails[0].TrackDetails[0].OperatingCompanyOrCarrierDescription != "FedEx Express" ||
 		reply.CompletedTrackDetails[0].TrackDetails[0].TrackingNumber != "123456789012" ||
 		reply.CompletedTrackDetails[0].TrackDetails[0].TrackingNumberUniqueIdentifier != "2458115001~123456789012~FX" ||

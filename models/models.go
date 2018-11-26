@@ -90,6 +90,7 @@ type RequestedShipment struct {
 	ServiceType   string    `xml:"q0:ServiceType"`
 	PackagingType string    `xml:"q0:PackagingType"`
 
+	// We don't use these, but may do so later
 	// ShipmentManifestDetail      *ShipmentManifestDetail      `xml:"q0:ShipmentManifestDetail,omitempty"`
 	// TotalWeight                 *Weight                      `xml:"q0:TotalWeight,omitempty"`
 	// TotalInsuredValue           *Money                       `xml:"q0:TotalInsuredValue,omitempty"`
