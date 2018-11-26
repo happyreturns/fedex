@@ -28,8 +28,18 @@ const (
 // Bypassing painful proper SOAP implementation and just crafting minimal XML messages to get the data we need.
 // Fedex WSDL docs here: http://images.fedex.com/us/developer/product/WebServices/MyWebHelp/DeveloperGuide2012.pdf
 type Fedex struct {
-	Key, Password, Account, Meter, SmartPostHubID string
-	FedexURL                                      string
+	Key      string
+	Password string
+	Account  string
+	Meter    string
+
+	SmartPostKey      string
+	SmartPostPassword string
+	SmartPostAccount  string
+	SmartPostMeter    string
+	SmartPostHubID    string
+
+	FedexURL string
 }
 
 func (f Fedex) wrapSoapRequest(body string, namespace string) string {

@@ -7,18 +7,76 @@ import (
 )
 
 func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
+	var serviceType string
+	var weight models.Weight
+	var dimensions models.Dimensions
+	var smartPostDetail *models.SmartPostDetail
+	var specialServicesRequested *models.SpecialServicesRequested
+	var account string
+	var key string
+	var password string
+	var meter string
+
+	switch shipmentType {
+	case "SMART_POST":
+		serviceType = "SMART_POST"
+		weight = models.Weight{
+			Units: "LB",
+			Value: 0.99,
+		}
+		dimensions = models.Dimensions{
+			Length: 6,
+			Width:  4,
+			Height: 1,
+			Units:  "IN",
+		}
+
+		account = f.SmartPostAccount
+		key = f.SmartPostKey
+		password = f.SmartPostPassword
+		meter = f.SmartPostMeter
+
+		smartPostDetail = &models.SmartPostDetail{
+			Indicia:              "PARCEL_RETURN",
+			AncillaryEndorsement: "ADDRESS_CORRECTION",
+			HubID:                f.SmartPostHubID,
+		}
+		specialServicesRequested = &models.SpecialServicesRequested{
+			SpecialServiceTypes: []string{"RETURN_SHIPMENT"},
+			ReturnShipmentDetail: models.ReturnShipmentDetail{
+				ReturnType: "PRINT_RETURN_LABEL",
+			},
+		}
+	default:
+		serviceType = "FEDEX_GROUND"
+		weight = models.Weight{
+			Units: "LB",
+			Value: 40,
+		}
+		dimensions = models.Dimensions{
+			Length: 5,
+			Width:  5,
+			Height: 5,
+			Units:  "IN",
+		}
+
+		account = f.Account
+		key = f.Key
+		password = f.Password
+		meter = f.Meter
+	}
 
 	req := models.ProcessShipmentRequest{
 		Request: models.Request{
 			WebAuthenticationDetail: models.WebAuthenticationDetail{
 				UserCredential: models.UserCredential{
-					Key:      f.Key,
-					Password: f.Password,
+					Key:      key,
+					Password: password,
 				},
 			},
 			ClientDetail: models.ClientDetail{
-				AccountNumber: f.Account,
-				MeterNumber:   f.Meter,
+				AccountNumber: account,
+				MeterNumber:   meter,
 			},
 			Version: models.Version{
 				ServiceID: "ship",
@@ -28,15 +86,15 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 		RequestedShipment: models.RequestedShipment{
 			ShipTimestamp: models.Timestamp(time.Now()),
 			DropoffType:   "REGULAR_PICKUP",
-			// ServiceType:   "FEDEX_GROUND",
+			ServiceType:   serviceType,
 			PackagingType: "YOUR_PACKAGING",
 			Shipper: models.Shipper{
-				AccountNumber: f.Account,
+				AccountNumber: account,
 				Address:       fromLocation,
 				Contact:       fromContact,
 			},
 			Recipient: models.Shipper{
-				AccountNumber: f.Account,
+				AccountNumber: account,
 				Address:       toLocation,
 				Contact:       toContact,
 			},
@@ -44,13 +102,15 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 				PaymentType: "SENDER",
 				Payor: models.Payor{
 					ResponsibleParty: models.ResponsibleParty{
-						AccountNumber: f.Account,
+						AccountNumber: account,
 					},
 				},
 			},
+			SmartPostDetail:          smartPostDetail,
+			SpecialServicesRequested: specialServicesRequested,
 			LabelSpecification: models.LabelSpecification{
 				LabelFormatType: "COMMON2D",
-				ImageType:       "PNG",
+				ImageType:       "PDF",
 			},
 			RateRequestTypes: "LIST",
 			PackageCount:     1,
@@ -65,41 +125,11 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 							Value: "NAFTA_COO",
 						},
 					},
+					Weight:     weight,
+					Dimensions: dimensions,
 				},
 			},
 		},
-	}
-
-	switch shipmentType {
-	case "SMART_POST":
-		req.RequestedShipment.ServiceType = "SMART_POST"
-		req.RequestedShipment.SmartPostDetail = &models.SmartPostDetail{
-			Indicia:              "PRESORTED_STANDARD",
-			AncillaryEndorsement: "ADDRESS_CORRECTION",
-			HubID:                f.SmartPostHubID,
-		}
-		req.RequestedShipment.RequestedPackageLineItems[0].Weight = models.Weight{
-			Units: "LB",
-			Value: 0.99,
-		}
-		req.RequestedShipment.RequestedPackageLineItems[0].Dimensions = models.Dimensions{
-			Length: 6,
-			Width:  4,
-			Height: 1,
-			Units:  "IN",
-		}
-	default:
-		req.RequestedShipment.ServiceType = "FEDEX_GROUND"
-		req.RequestedShipment.RequestedPackageLineItems[0].Weight = models.Weight{
-			Units: "LB",
-			Value: 40,
-		}
-		req.RequestedShipment.RequestedPackageLineItems[0].Dimensions = models.Dimensions{
-			Length: 5,
-			Width:  5,
-			Height: 5,
-			Units:  "IN",
-		}
 	}
 
 	return models.Envelope{

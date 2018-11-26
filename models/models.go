@@ -100,11 +100,21 @@ type RequestedShipment struct {
 	Recipient Shipper `xml:"q0:Recipient"`
 
 	ShippingChargesPayment    Payment                    `xml:"q0:ShippingChargesPayment"`
+	SpecialServicesRequested  *SpecialServicesRequested  `xml:"q0:SpecialServicesRequested,omitempty"`
 	SmartPostDetail           *SmartPostDetail           `xml:"q0:SmartPostDetail,omitempty"`
 	LabelSpecification        LabelSpecification         `xml:"q0:LabelSpecification"`
 	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
 	PackageCount              int                        `xml:"q0:PackageCount"`
 	RequestedPackageLineItems []RequestedPackageLineItem `xml:"q0:RequestedPackageLineItems"`
+}
+
+type SpecialServicesRequested struct {
+	SpecialServiceTypes  []string             `xml:"q0:SpecialServiceTypes"`
+	ReturnShipmentDetail ReturnShipmentDetail `xml:"q0:ReturnShipmentDetail"`
+}
+
+type ReturnShipmentDetail struct {
+	ReturnType string `xml:"q0:ReturnType"`
 }
 
 type ShipmentManifestDetail struct {

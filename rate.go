@@ -55,7 +55,7 @@ func (f Fedex) rateSOAPRequest(fromLocation, toLocation models.Address, fromCont
 					},
 					LabelSpecification: models.LabelSpecification{
 						LabelFormatType: "COMMON2D",
-						ImageType:       "PNG",
+						ImageType:       "PDF",
 					},
 					RateRequestTypes: "LIST",
 					PackageCount:     1,

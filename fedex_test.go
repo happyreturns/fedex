@@ -7,15 +7,14 @@ import (
 )
 
 var f Fedex = Fedex{
-	Key:            "IfRnoRdbpEvBPbEn",
-	Password:       "A4dpGK2dPW4P2sSba9suwOCpo",
-	Account:        "510087780",
-	Meter:          "119090332",
-	FedexURL:       FedexAPITestURL,
-	SmartPostHubID: "5531",
+	Key:      "IfRnoRdbpEvBPbEn",
+	Password: "A4dpGK2dPW4P2sSba9suwOCpo",
+	Account:  "510087780",
+	Meter:    "119090332",
 }
 
 func TestTrack(t *testing.T) {
+	f.FedexURL = FedexAPITestURL
 	reply, err := f.TrackByNumber(CarrierCodeExpress, "123456789012")
 	if err != nil {
 		t.Fatal(err)
@@ -47,6 +46,7 @@ func TestTrack(t *testing.T) {
 }
 
 func TestRate(t *testing.T) {
+	f.FedexURL = FedexAPITestURL
 	reply, err := f.Rate(models.Address{
 		StreetLines:         []string{"1511 15th Street", "#205"},
 		City:                "Santa Monica",
@@ -105,6 +105,7 @@ func TestRate(t *testing.T) {
 }
 
 func TestShipGround(t *testing.T) {
+	f.FedexURL = FedexAPITestURL
 	reply, err := f.ShipGround(models.Address{
 		StreetLines:         []string{"1511 15th Street", "#205"},
 		City:                "Santa Monica",
@@ -171,7 +172,7 @@ func TestShipGround(t *testing.T) {
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds[0].TrackingIdType != "FEDEX" ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type != "OUTBOUND_LABEL" ||
-		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PNG" ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PDF" ||
 
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts[0].Image == "" {
@@ -180,6 +181,12 @@ func TestShipGround(t *testing.T) {
 }
 
 func TestShipSmartPost(t *testing.T) {
+	// Fill in prod creds to run this test, as this test only works in prod
+	if f.SmartPostKey == "" {
+		t.SkipNow()
+	}
+	f.FedexURL = FedexAPIURL
+
 	reply, err := f.ShipSmartPost(models.Address{
 		StreetLines:         []string{"1511 15th Street", "#205"},
 		City:                "Santa Monica",
@@ -205,17 +212,16 @@ func TestShipSmartPost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// if reply.Failed() {
-	// 	t.Fatal("reply should not have failed")
-	// }
-	if
-	// reply.HighestSeverity != "SUCCESS" ||
-	// Basic validation
-	len(reply.Notifications) != 1 ||
+	if reply.Failed() {
+		t.Fatal("reply should not have failed")
+	}
+	if reply.HighestSeverity != "SUCCESS" ||
+		// Basic validation
+		len(reply.Notifications) != 1 ||
 		reply.Notifications[0].Source != "ship" ||
-		reply.Notifications[0].Code != "2505" ||
-		// reply.Notifications[0].Message != "Success" ||
-		// reply.Notifications[0].LocalizedMessage != "Success" ||
+		reply.Notifications[0].Code != "0000" ||
+		reply.Notifications[0].Message != "Success" ||
+		reply.Notifications[0].LocalizedMessage != "Success" ||
 		reply.Version.ServiceID != "ship" ||
 		reply.Version.Major != 23 ||
 		reply.Version.Intermediate != 0 ||
@@ -224,22 +230,16 @@ func TestShipSmartPost(t *testing.T) {
 		reply.CompletedShipmentDetail.UsDomestic != "true" ||
 		reply.CompletedShipmentDetail.CarrierCode != "FXSP" ||
 		reply.CompletedShipmentDetail.MasterTrackingId.TrackingIdType != "USPS" ||
-		reply.CompletedShipmentDetail.MasterTrackingId.TrackingNumber == "74811111114825875057" ||
+		reply.CompletedShipmentDetail.MasterTrackingId.TrackingNumber == "" ||
 		reply.CompletedShipmentDetail.ServiceTypeDescription != "SMART POST" ||
 		reply.CompletedShipmentDetail.ServiceDescription.ServiceType != "SMART_POST" ||
-		// skip ServiceDescription.Names
 		reply.CompletedShipmentDetail.PackagingDescription != "YOUR_PACKAGING" ||
 		reply.CompletedShipmentDetail.OperationalDetail.TransitTime != "TWO_DAYS" ||
 		reply.CompletedShipmentDetail.OperationalDetail.IneligibleForMoneyBackGuarantee != "false" ||
-		reply.CompletedShipmentDetail.ShipmentRating.ActualRateType != "PAYOR_ACCOUNT_PACKAGE" ||
-		len(reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails) != 2 ||
-		// // skip most ShipmentRateDetails fields
-		reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails[0].RateType != "PAYOR_ACCOUNT_PACKAGE" ||
-		reply.CompletedShipmentDetail.ShipmentRating.ShipmentRateDetails[1].RateType != "PAYOR_LIST_PACKAGE" ||
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.TrackingIds[0].TrackingIdType != "USPS" ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type != "OUTBOUND_LABEL" ||
-		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PNG" ||
+		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PDF" ||
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts[0].Image == "" {
 		t.Fatal("output not correct")
