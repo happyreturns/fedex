@@ -176,8 +176,17 @@ func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address,
 }
 
 // TODO
-// func (f Fedex) Pickup() (reply *models.CreatePickupReply, error) {
-// }
+func (f Fedex) CreatePickup(pickupLocation models.PickupLocation, toAddress models.Address) (*models.CreatePickupReply, error) {
+
+	request := f.createPickupRequest(pickupLocation, toAddress)
+	response := &models.CreatePickupResponseEnvelope{}
+
+	err := f.makeRequestAndUnmarshal("/pickup/v17", request, response)
+	if err != nil {
+		return nil, fmt.Errorf("make create pickup request and unmarshal: %s", err)
+	}
+	return &response.Reply, nil
+}
 
 // Unmarshal XML SOAP response into a TrackReply
 func (f Fedex) parseTrackReply(xmlResp []byte) (reply models.TrackReply, err error) {

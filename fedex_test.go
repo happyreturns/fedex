@@ -7,10 +7,11 @@ import (
 )
 
 var f Fedex = Fedex{
-	Key:      "IfRnoRdbpEvBPbEn",
-	Password: "A4dpGK2dPW4P2sSba9suwOCpo",
-	Account:  "510087780",
-	Meter:    "119090332",
+	// TODO fill in your creds
+	// Key:      "",
+	// Password: "",
+	// Account:  "",
+	// Meter:    "",
 }
 
 func TestTrack(t *testing.T) {
@@ -48,10 +49,10 @@ func TestTrack(t *testing.T) {
 func TestRate(t *testing.T) {
 	f.FedexURL = FedexAPITestURL
 	reply, err := f.Rate(models.Address{
-		StreetLines:         []string{"1511 15th Street", "#205"},
+		StreetLines:         []string{"1517 Lincoln Blvd"},
 		City:                "Santa Monica",
 		StateOrProvinceCode: "CA",
-		PostalCode:          "90404",
+		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Address{
 		StreetLines:         []string{"1106 Broadway"},
@@ -60,13 +61,13 @@ func TestRate(t *testing.T) {
 		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Contact{
-		PersonName:   "Joachim Valdez",
+		PersonName:   "Jenny",
 		PhoneNumber:  "213 867 5309",
-		EmailAddress: "joachim@happyreturns.com",
+		EmailAddress: "jenny@jenny.com",
 	}, models.Contact{
-		CompanyName:  "Happy Returns",
-		PhoneNumber:  "424 325 9510",
-		EmailAddress: "joachim@happyreturns.com",
+		CompanyName:  "Some Company",
+		PhoneNumber:  "214 867 5309",
+		EmailAddress: "somecompany@somecompany.com",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -107,10 +108,10 @@ func TestRate(t *testing.T) {
 func TestShipGround(t *testing.T) {
 	f.FedexURL = FedexAPITestURL
 	reply, err := f.ShipGround(models.Address{
-		StreetLines:         []string{"1511 15th Street", "#205"},
+		StreetLines:         []string{"1517 Lincoln Blvd"},
 		City:                "Santa Monica",
 		StateOrProvinceCode: "CA",
-		PostalCode:          "90404",
+		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Address{
 		StreetLines:         []string{"1106 Broadway"},
@@ -119,13 +120,13 @@ func TestShipGround(t *testing.T) {
 		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Contact{
-		PersonName:   "Joachim Valdez",
+		PersonName:   "Jenny",
 		PhoneNumber:  "213 867 5309",
-		EmailAddress: "joachim@happyreturns.com",
+		EmailAddress: "jenny@jenny.com",
 	}, models.Contact{
-		CompanyName:  "Happy Returns",
-		PhoneNumber:  "424 325 9510",
-		EmailAddress: "joachim@happyreturns.com",
+		CompanyName:  "Some Company",
+		PhoneNumber:  "214 867 5309",
+		EmailAddress: "somecompany@somecompany.com",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -188,10 +189,10 @@ func TestShipSmartPost(t *testing.T) {
 	f.FedexURL = FedexAPIURL
 
 	reply, err := f.ShipSmartPost(models.Address{
-		StreetLines:         []string{"1511 15th Street", "#205"},
+		StreetLines:         []string{"1517 Lincoln Blvd"},
 		City:                "Santa Monica",
 		StateOrProvinceCode: "CA",
-		PostalCode:          "90404",
+		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Address{
 		StreetLines:         []string{"1106 Broadway"},
@@ -200,13 +201,13 @@ func TestShipSmartPost(t *testing.T) {
 		PostalCode:          "90401",
 		CountryCode:         "US",
 	}, models.Contact{
-		PersonName:   "Joachim Valdez",
+		PersonName:   "Jenny",
 		PhoneNumber:  "213 867 5309",
-		EmailAddress: "joachim@happyreturns.com",
+		EmailAddress: "jenny@jenny.com",
 	}, models.Contact{
-		CompanyName:  "Happy Returns",
-		PhoneNumber:  "424 325 9510",
-		EmailAddress: "joachim@happyreturns.com",
+		CompanyName:  "Some Company",
+		PhoneNumber:  "214 867 5309",
+		EmailAddress: "somecompany@somecompany.com",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -243,5 +244,35 @@ func TestShipSmartPost(t *testing.T) {
 		len(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts) != 1 ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Parts[0].Image == "" {
 		t.Fatal("output not correct")
+	}
+}
+
+func TestCreatePickup(t *testing.T) {
+	// TODO not working yet
+	t.SkipNow()
+
+	_, err := f.CreatePickup(models.PickupLocation{
+		Address: models.Address{
+			StreetLines:         []string{"1517 Lincoln Blvd"},
+			City:                "Santa Monica",
+			StateOrProvinceCode: "CA",
+			PostalCode:          "90401",
+			CountryCode:         "US",
+		},
+		Contact: models.Contact{
+			PersonName:   "Jenny",
+			PhoneNumber:  "213 867 5309",
+			EmailAddress: "jenny@jenny.com",
+		}},
+		models.Address{
+			StreetLines:         []string{"1106 Broadway"},
+			City:                "Santa Monica",
+			StateOrProvinceCode: "CA",
+			PostalCode:          "90401",
+			CountryCode:         "US",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

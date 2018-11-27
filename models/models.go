@@ -22,6 +22,10 @@ type RateResponseEnvelope struct {
 	Reply RateReply `xml:"Body>RateReply"`
 }
 
+type CreatePickupResponseEnvelope struct {
+	Reply CreatePickupReply `xml:"Body>CreatePickupReply"`
+}
+
 // Request has just the default auth fields on all requests
 type Request struct {
 	WebAuthenticationDetail WebAuthenticationDetail `xml:"q0:WebAuthenticationDetail"`
@@ -57,7 +61,47 @@ type TrackRequest struct {
 
 type CreatePickupRequest struct {
 	Request
-	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`
+	OriginDetail         OriginDetail        `xml:"q0:OriginDetail"`
+	FreightPickupDetail  FreightPickupDetail `xml:"q0:FreightPickupDetail"`
+	PackageCount         int                 `xml:"q0:PackageCount"`
+	CarrierCode          string              `xml:"q0:CarrierCode"`
+	Remarks              string              `xml:"q0:Remarks"`
+	CommodityDescription string              `xml:"q0:CommodityDescription"`
+}
+
+type FreightPickupDetail struct {
+	ApprovedBy  Contact                 `xml:"q0:ApprovedBy"`
+	Payment     string                  `xml:"q0:Payment"`
+	Role        string                  `xml:"q0:Role"`
+	SubmittedBy Contact                 `xml:"q0:SubmittedBy"`
+	LineItems   []FreightPickupLineItem `xml:"q0:LineItems"`
+}
+
+type FreightPickupLineItem struct {
+	Service            string  `xml:"q0:Service"`
+	SequenceNumber     int     `xml:"q0:SequenceNumber"`
+	Destination        Address `xml:"q0:Destination"`
+	Packaging          string  `xml:"q0:Packaging"`
+	Pieces             int     `xml:"q0:Pieces"`
+	Weight             Weight  `xml:"q0:Weight"`
+	TotalHandlingUnits int     `xml:"q0:TotalHandlingUnits"`
+	JustOneMore        bool    `xml:"q0:JustOneMore"`
+	Description        string  `xml:"q0:Description"`
+}
+
+type OriginDetail struct {
+	UseAccountAddress       Bool           `xml:"q0:UseAccountAddress"`
+	PickupLocation          PickupLocation `xml:"q0:PickupLocation"`
+	PackageLocation         string         `xml:"q0:PackageLocation"`
+	BuildingPart            string         `xml:"q0:BuildingPart"`
+	BuildingPartDescription string         `xml:"q0:BuildingPartDescription"`
+	ReadyTimestamp          Timestamp      `xml:"q0:ReadyTimestamp"`
+	CompanyCloseTime        string         `xml:"q0:CompanyCloseTime"`
+}
+
+type PickupLocation struct {
+	Contact Contact `xml:"q0:Contact"`
+	Address Address `xml:"q0:Address"`
 }
 
 type SelectionDetails struct {
@@ -221,8 +265,7 @@ type RateReply struct {
 type CreatePickupReply struct {
 	Reply
 	PickupConfirmationNumber string
-	// TransactionDetail       TransactionDetail
-	// CompletedShipmentDetail CompletedShipmentDetail
+	Location                 string
 }
 
 type RateReplyDetail struct {
