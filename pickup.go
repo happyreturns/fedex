@@ -33,11 +33,11 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 				OriginDetail: models.OriginDetail{
 					UseAccountAddress:       false,
 					PickupLocation:          pickupLocation,
-					PackageLocation:         "FRONT",
-					BuildingPart:            "BUILDING",
+					PackageLocation:         "FRONT",    // TODO not necessarily true
+					BuildingPart:            "BUILDING", // TODO not necessarily true
 					BuildingPartDescription: "",
 					ReadyTimestamp:          models.Timestamp(time.Now()),
-					CompanyCloseTime:        "23:00:00",
+					CompanyCloseTime:        "23:00:00", // TODO not necessarily true
 				},
 				FreightPickupDetail: models.FreightPickupDetail{
 					ApprovedBy:  pickupLocation.Contact,
@@ -53,7 +53,7 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 							Pieces:         1,
 							Weight: models.Weight{
 								Units: "LB",
-								Value: 0.99,
+								Value: 1,
 							},
 							TotalHandlingUnits: 1,
 							JustOneMore:        false,
