@@ -248,10 +248,11 @@ func TestShipSmartPost(t *testing.T) {
 }
 
 func TestCreatePickup(t *testing.T) {
-	// TODO not working yet
+	// Fill in prod creds to run this test, as this test only works in prod
 	t.SkipNow()
+	f.FedexURL = FedexAPIURL
 
-	_, err := f.CreatePickup(models.PickupLocation{
+	reply, err := f.CreatePickup(models.PickupLocation{
 		Address: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},
 			City:                "Santa Monica",
@@ -274,5 +275,25 @@ func TestCreatePickup(t *testing.T) {
 	)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if reply.Failed() {
+		t.Fatal("reply should not have failed")
+	}
+
+	if reply.HighestSeverity != "SUCCESS" ||
+		// Basic validation
+		len(reply.Notifications) != 1 ||
+		reply.Notifications[0].Source != "disp" ||
+		reply.Notifications[0].Code != "0000" ||
+		reply.Notifications[0].Message != "Success" ||
+		reply.Version.ServiceID != "disp" ||
+		reply.Version.Major != 17 ||
+		reply.Version.Intermediate != 0 ||
+		reply.Version.Minor != 0 ||
+		reply.PickupConfirmationNumber == "" ||
+		reply.PickupConfirmationNumber == "0" ||
+		reply.Location != "SMOA" {
+		t.Fatal("output not correct")
 	}
 }
