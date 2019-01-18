@@ -34,7 +34,7 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 		}
 		specialServicesRequested = &models.SpecialServicesRequested{
 			SpecialServiceTypes: []string{"RETURN_SHIPMENT"},
-			ReturnShipmentDetail: models.ReturnShipmentDetail{
+			ReturnShipmentDetail: &models.ReturnShipmentDetail{
 				ReturnType: "PRINT_RETURN_LABEL",
 			},
 		}
@@ -50,6 +50,37 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 			Height: 13,
 			Units:  "IN",
 		}
+		specialServicesRequested = &models.SpecialServicesRequested{
+			SpecialServiceTypes: []string{"EVENT_NOTIFICATION"},
+		}
+	}
+
+	specialServicesRequested.EventNotificationDetail = &models.EventNotificationDetail{
+		AggregationType: "PER_SHIPMENT",
+		PersonalMessage: "TEST PersonalMessage",
+		EventNotifications: []models.EventNotification{{
+			Role: "SHIPPER",
+			Events: []string{
+				"ON_DELIVERY",
+				"ON_ESTIMATED_DELIVERY",
+				"ON_EXCEPTION",
+				"ON_SHIPMENT",
+				"ON_TENDER",
+			},
+			NotificationDetail: models.NotificationDetail{
+				NotificationType: "EMAIL",
+				EmailDetail: models.EmailDetail{
+					EmailAddress: "joachim@happyreturns.com",
+					Name:         "TEST NAME",
+				},
+				Localization: models.Localization{
+					LanguageCode: "en",
+				},
+			},
+			FormatSpecification: models.FormatSpecification{
+				Type: "TEXT",
+			},
+		}},
 	}
 
 	req := models.ProcessShipmentRequest{

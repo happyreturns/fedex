@@ -318,8 +318,10 @@ func TestShipSmartPost(t *testing.T) {
 }
 
 func TestCreatePickup(t *testing.T) {
-	// Fill in prod creds to run this test, as this test only works in prod
-	t.SkipNow()
+	if f.HubID != "" || f.FedexURL != FedexAPIURL {
+		// Test only works for prod, not smartpost
+		t.SkipNow()
+	}
 
 	reply, err := f.CreatePickup(models.PickupLocation{
 		Address: models.Address{
