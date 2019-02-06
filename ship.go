@@ -1,6 +1,7 @@
 package fedex
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/happyreturns/fedex/models"
@@ -57,7 +58,7 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 
 	specialServicesRequested.EventNotificationDetail = &models.EventNotificationDetail{
 		AggregationType: "PER_SHIPMENT",
-		PersonalMessage: "TEST PersonalMessage",
+		PersonalMessage: fmt.Sprintf("shipment type: %s", shipmentType),
 		EventNotifications: []models.EventNotification{{
 			Role: "SHIPPER",
 			Events: []string{
@@ -78,7 +79,7 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 				},
 			},
 			FormatSpecification: models.FormatSpecification{
-				Type: "TEXT",
+				Type: "HTML",
 			},
 		}},
 	}

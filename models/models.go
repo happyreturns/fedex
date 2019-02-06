@@ -202,8 +202,8 @@ type RequestedShipment struct {
 
 type SpecialServicesRequested struct {
 	SpecialServiceTypes     []string                 `xml:"q0:SpecialServiceTypes,omitempty"`
-	ReturnShipmentDetail    *ReturnShipmentDetail    `xml:"q0:ReturnShipmentDetail,omitempty"`
 	EventNotificationDetail *EventNotificationDetail `xml:"q0:EventNotificationDetail,omitempty"`
+	ReturnShipmentDetail    *ReturnShipmentDetail    `xml:"q0:ReturnShipmentDetail,omitempty"`
 }
 
 type EventNotificationDetail struct {
