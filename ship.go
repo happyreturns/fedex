@@ -14,9 +14,38 @@ func (f Fedex) shipmentEnvelope(shipmentType string, shipment *models.Shipment) 
 	var dimensions models.Dimensions
 	var smartPostDetail *models.SmartPostDetail
 	var specialServicesRequested *models.SpecialServicesRequested
+	var eventNotificationDetail *models.EventNotificationDetail
 
 	if shipment == nil {
 		return models.Envelope{}, errors.New("empty shipment")
+	}
+
+	eventNotificationDetail = &models.EventNotificationDetail{
+		AggregationType: "PER_SHIPMENT",
+		PersonalMessage: fmt.Sprintf("shipment type: %s", shipmentType),
+		EventNotifications: []models.EventNotification{{
+			Role: "SHIPPER",
+			Events: []string{
+				"ON_DELIVERY",
+				"ON_ESTIMATED_DELIVERY",
+				"ON_EXCEPTION",
+				"ON_SHIPMENT",
+				"ON_TENDER",
+			},
+			NotificationDetail: models.NotificationDetail{
+				NotificationType: "EMAIL",
+				EmailDetail: models.EmailDetail{
+					EmailAddress: shipment.NotificationEmail,
+					Name:         "TEST NAME",
+				},
+				Localization: models.Localization{
+					LanguageCode: "en",
+				},
+			},
+			FormatSpecification: models.FormatSpecification{
+				Type: "HTML",
+			},
+		}},
 	}
 
 	switch shipmentType {
@@ -44,6 +73,10 @@ func (f Fedex) shipmentEnvelope(shipmentType string, shipment *models.Shipment) 
 				ReturnType: "PRINT_RETURN_LABEL",
 			},
 		}
+
+		if shipment.NotificationEmail != "" {
+			specialServicesRequested.EventNotificationDetail = eventNotificationDetail
+		}
 	default:
 		serviceType = "FEDEX_GROUND"
 		weight = models.Weight{
@@ -56,37 +89,12 @@ func (f Fedex) shipmentEnvelope(shipmentType string, shipment *models.Shipment) 
 			Height: 13,
 			Units:  "IN",
 		}
-		specialServicesRequested = &models.SpecialServicesRequested{
-			SpecialServiceTypes: []string{"EVENT_NOTIFICATION"},
+		if shipment.NotificationEmail != "" {
+			specialServicesRequested = &models.SpecialServicesRequested{
+				SpecialServiceTypes:     []string{"EVENT_NOTIFICATION"},
+				EventNotificationDetail: eventNotificationDetail,
+			}
 		}
-	}
-
-	specialServicesRequested.EventNotificationDetail = &models.EventNotificationDetail{
-		AggregationType: "PER_SHIPMENT",
-		PersonalMessage: fmt.Sprintf("shipment type: %s", shipmentType),
-		EventNotifications: []models.EventNotification{{
-			Role: "SHIPPER",
-			Events: []string{
-				"ON_DELIVERY",
-				"ON_ESTIMATED_DELIVERY",
-				"ON_EXCEPTION",
-				"ON_SHIPMENT",
-				"ON_TENDER",
-			},
-			NotificationDetail: models.NotificationDetail{
-				NotificationType: "EMAIL",
-				EmailDetail: models.EmailDetail{
-					EmailAddress: shipment.NotificationEmail,
-					Name:         "TEST NAME",
-				},
-				Localization: models.Localization{
-					LanguageCode: "en",
-				},
-			},
-			FormatSpecification: models.FormatSpecification{
-				Type: "HTML",
-			},
-		}},
 	}
 
 	req := models.ProcessShipmentRequest{

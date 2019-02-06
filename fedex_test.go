@@ -158,7 +158,7 @@ func TestShipGround(t *testing.T) {
 		t.Fatal("error did not match", err)
 	}
 
-	reply, err := f.ShipGround(&models.Shipment{
+	exampleShipment := &models.Shipment{
 		FromAddress: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},
 			City:                "Santa Monica",
@@ -184,7 +184,8 @@ func TestShipGround(t *testing.T) {
 			EmailAddress: "somecompany@somecompany.com",
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
-	})
+	}
+	reply, err := f.ShipGround(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,6 +247,18 @@ func TestShipGround(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// it also works with no email
+	exampleShipment.NotificationEmail = ""
+	reply, err = f.ShipGround(exampleShipment)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reply.Error() != nil {
+		fmt.Println(reply)
+		t.Fatal("reply should not have failed")
+	}
 }
 
 func TestShipSmartPost(t *testing.T) {
@@ -263,7 +276,7 @@ func TestShipSmartPost(t *testing.T) {
 		t.Fatal("error did not match", err)
 	}
 
-	reply, err := f.ShipSmartPost(&models.Shipment{
+	exampleShipment := &models.Shipment{
 		FromAddress: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},
 			City:                "Santa Monica",
@@ -283,7 +296,8 @@ func TestShipSmartPost(t *testing.T) {
 			EmailAddress: "somecompany@somecompany.com",
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
-	})
+	}
+	reply, err := f.ShipSmartPost(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -332,6 +346,18 @@ func TestShipSmartPost(t *testing.T) {
 	err = ioutil.WriteFile(fmt.Sprintf("output-smart-post-%s.png", f.Key), pngBytes, 0644)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	// it also works with no email
+	exampleShipment.NotificationEmail = ""
+	reply, err = f.ShipSmartPost(exampleShipment)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reply.Error() != nil {
+		fmt.Println(reply)
+		t.Fatal("reply should not have failed")
 	}
 }
 
