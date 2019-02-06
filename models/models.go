@@ -9,7 +9,14 @@ import (
 const notificationSeverityError = "ERROR"
 const notificationSeveritySuccess = "SUCCESS"
 
-// Structures to unmarshall the Fedex SOAP answer into
+// Shipment is convenience struct that has fields for creating a shipment (not part of FedEx API)
+type Shipment struct {
+	FromAddress       Address
+	ToAddress         Address
+	FromContact       Contact
+	ToContact         Contact
+	NotificationEmail string
+}
 
 // Envelope is the soap wrapper for all requests
 type Envelope struct {

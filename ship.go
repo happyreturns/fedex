@@ -1,18 +1,23 @@
 package fedex
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/happyreturns/fedex/models"
 )
 
-func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation models.Address, fromContact, toContact models.Contact) (models.Envelope, error) {
+func (f Fedex) shipmentEnvelope(shipmentType string, shipment *models.Shipment) (models.Envelope, error) {
 	var serviceType string
 	var weight models.Weight
 	var dimensions models.Dimensions
 	var smartPostDetail *models.SmartPostDetail
 	var specialServicesRequested *models.SpecialServicesRequested
+
+	if shipment == nil {
+		return models.Envelope{}, errors.New("empty shipment")
+	}
 
 	switch shipmentType {
 	case "SMART_POST":
@@ -71,7 +76,7 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 			NotificationDetail: models.NotificationDetail{
 				NotificationType: "EMAIL",
 				EmailDetail: models.EmailDetail{
-					EmailAddress: "joachim@happyreturns.com",
+					EmailAddress: shipment.NotificationEmail,
 					Name:         "TEST NAME",
 				},
 				Localization: models.Localization{
@@ -108,13 +113,13 @@ func (f Fedex) shipmentEnvelope(shipmentType string, fromLocation, toLocation mo
 			PackagingType: "YOUR_PACKAGING",
 			Shipper: models.Shipper{
 				AccountNumber: f.Account,
-				Address:       fromLocation,
-				Contact:       fromContact,
+				Address:       shipment.FromAddress,
+				Contact:       shipment.FromContact,
 			},
 			Recipient: models.Shipper{
 				AccountNumber: f.Account,
-				Address:       toLocation,
-				Contact:       toContact,
+				Address:       shipment.ToAddress,
+				Contact:       shipment.ToContact,
 			},
 			ShippingChargesPayment: models.Payment{
 				PaymentType: "SENDER",
