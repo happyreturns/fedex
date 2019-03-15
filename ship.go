@@ -8,7 +8,7 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-func (f Fedex) shipmentEnvelope(shipmentType string, shipment *models.Shipment) (models.Envelope, error) {
+func (f Fedex) shipmentRequest(shipmentType string, shipment *models.Shipment) (models.Envelope, error) {
 	var serviceType string
 	var weight models.Weight
 	var dimensions models.Dimensions
