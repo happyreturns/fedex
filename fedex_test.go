@@ -476,7 +476,7 @@ func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 }
 
 func checkErrorMatches(t *testing.T, err error, expectedText string) {
-	if err != nil && !strings.HasPrefix(err.Error(), expectedText) {
+	if err == nil || !strings.HasPrefix(err.Error(), expectedText) {
 		t.Fatal("error", err, "doesn't match", expectedText)
 	}
 }
