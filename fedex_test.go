@@ -178,11 +178,11 @@ func TestShipGround(t *testing.T) {
 	checkErrorMatches(t, err, "create shipment request: empty shipment")
 
 	// Error case - invalid shipment
-	_, err = prodFedex.ShipGround(&models.Shipment{})
+	_, err = prodFedex.ShipGround(&Shipment{})
 	checkErrorMatches(t, err, "make ship ground request and unmarshal: response error: reply got error:")
 
 	// Successful case
-	exampleShipment := &models.Shipment{
+	exampleShipment := &Shipment{
 		FromAddress: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},
 			City:                "Santa Monica",
@@ -208,6 +208,7 @@ func TestShipGround(t *testing.T) {
 			EmailAddress: "somecompany@somecompany.com",
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
+		Reference:         "My ship ground reference",
 	}
 	reply, err := prodFedex.ShipGround(exampleShipment)
 	if err != nil {
@@ -293,7 +294,7 @@ func TestShipSmartPost(t *testing.T) {
 	}
 
 	// Error case - invalid shipment
-	_, err = laSmartPostFedex.ShipSmartPost(&models.Shipment{})
+	_, err = laSmartPostFedex.ShipSmartPost(&Shipment{})
 	if err == nil || !strings.HasPrefix(err.Error(), "make ship smart post request and unmarshal: response error: reply got error:") {
 		t.Fatal("error did not match", err)
 	}
@@ -390,7 +391,7 @@ func TestSendNotifications(t *testing.T) {
 }
 
 func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
-	exampleShipment := &models.Shipment{
+	exampleShipment := &Shipment{
 		FromAddress: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},
 			City:                "Santa Monica",
@@ -410,6 +411,7 @@ func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 			EmailAddress: "somecompany@somecompany.com",
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
+		Reference:         "My reference",
 	}
 	reply, err := fedexAccount.ShipSmartPost(exampleShipment)
 	if err != nil {

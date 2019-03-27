@@ -2,15 +2,6 @@ package models
 
 import "time"
 
-// Shipment is convenience struct that has fields for creating a shipment (not part of FedEx API)
-type Shipment struct {
-	FromAddress       Address
-	ToAddress         Address
-	FromContact       Contact
-	ToContact         Contact
-	NotificationEmail string
-}
-
 type Address struct {
 	StreetLines         []string `xml:"q0:StreetLines"`
 	City                string   `xml:"q0:City"`

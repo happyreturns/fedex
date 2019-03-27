@@ -37,6 +37,16 @@ type Fedex struct {
 	FedexURL string
 }
 
+// Shipment is convenience struct that has fields for creating a shipment
+type Shipment struct {
+	FromAddress       models.Address
+	ToAddress         models.Address
+	FromContact       models.Contact
+	ToContact         models.Contact
+	NotificationEmail string
+	Reference         string
+}
+
 // TrackByNumber returns tracking info for a specific Fedex tracking number
 func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.TrackReply, error) {
 
@@ -51,7 +61,7 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.Tra
 }
 
 // ShipGround creates a ground shipment
-func (f Fedex) ShipGround(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
+func (f Fedex) ShipGround(shipment *Shipment) (*models.ProcessShipmentReply, error) {
 
 	request, err := f.shipmentRequest("FEDEX_GROUND", shipment)
 	if err != nil {
@@ -67,7 +77,7 @@ func (f Fedex) ShipGround(shipment *models.Shipment) (*models.ProcessShipmentRep
 }
 
 // ShipSmartPost creates a Smart Post return shipment
-func (f Fedex) ShipSmartPost(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
+func (f Fedex) ShipSmartPost(shipment *Shipment) (*models.ProcessShipmentReply, error) {
 
 	request, err := f.shipmentRequest("SMART_POST", shipment)
 	if err != nil {
