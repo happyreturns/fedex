@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type Address struct {
 	StreetLines         []string `xml:"q0:StreetLines"`
 	City                string   `xml:"q0:City"`
@@ -108,7 +106,7 @@ type EmailDetail struct {
 }
 
 type Event struct {
-	Timestamp                  time.Time
+	Timestamp                  Timestamp
 	EventType                  string
 	EventDescription           string
 	StatusExceptionCode        string

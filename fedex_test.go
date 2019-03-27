@@ -100,6 +100,17 @@ func TestTrack(t *testing.T) {
 	if len(reply.Events()) == 0 {
 		t.Fatal("reply should have an event")
 	}
+
+	// Successful case - smart post
+	reply, err = testFedex.TrackByNumber(CarrierCodeSmartPost, "02396343484520070272")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Make sure smart post returned Events
+	if len(reply.Events()) == 0 {
+		t.Fatal("reply should have an event")
+	}
 }
 
 func TestRate(t *testing.T) {
