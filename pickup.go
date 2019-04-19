@@ -72,12 +72,12 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 
 func (f Fedex) pickupTime() time.Time {
 	now := time.Now()
+	year, month, day := now.Date()
 
-	if now.Hour() < 9 {
-		// 9am today
-		return time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Location())
+	// If it's past 9am, ship the next day, not today
+	if now.Hour() > 9 {
+		day++
 	}
 
-	// 9am tomorrow
-	return time.Date(now.Year(), now.Month(), now.Day()+1, 9, 0, 0, 0, now.Location())
+	return time.Date(year, month, day, 9, 0, 0, 0, now.Location())
 }
