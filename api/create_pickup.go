@@ -1,4 +1,4 @@
-package fedex
+package api
 
 import (
 	"fmt"
@@ -18,7 +18,19 @@ func init() {
 	}
 }
 
-func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddress models.Address) models.Envelope {
+func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.CreatePickupReply, error) {
+	request := a.createPickupRequest(pickup, numDaysToDelay)
+	response := &models.CreatePickupResponseEnvelope{}
+
+	err := a.makeRequestAndUnmarshalResponse("/pickup/v17", request, response)
+	if err != nil {
+		return nil, fmt.Errorf("make create pickup request and unmarshal: %s", err)
+	}
+
+	return &response.Reply, nil
+}
+
+func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/pickup/v17",
@@ -29,13 +41,13 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{
 						UserCredential: models.UserCredential{
-							Key:      f.Key,
-							Password: f.Password,
+							Key:      a.Key,
+							Password: a.Password,
 						},
 					},
 					ClientDetail: models.ClientDetail{
-						AccountNumber: f.Account,
-						MeterNumber:   f.Meter,
+						AccountNumber: a.Account,
+						MeterNumber:   a.Meter,
 					},
 					Version: models.Version{
 						ServiceID: "disp",
@@ -44,15 +56,15 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 				},
 				OriginDetail: models.OriginDetail{
 					UseAccountAddress:       false,
-					PickupLocation:          pickupLocation,
+					PickupLocation:          pickup.PickupLocation,
 					PackageLocation:         "NONE",  // TODO not necessarily true
 					BuildingPart:            "SUITE", // TODO not necessarily true
 					BuildingPartDescription: "",
-					ReadyTimestamp:          models.Timestamp(f.pickupTime(pickupLocation.Address)),
+					ReadyTimestamp:          models.Timestamp(pickupTime(pickup.PickupLocation.Address, numDaysToDelay)),
 					CompanyCloseTime:        "16:00:00", // TODO not necessarily true
 				},
 				FreightPickupDetail: models.FreightPickupDetail{
-					ApprovedBy:  pickupLocation.Contact,
+					ApprovedBy:  pickup.PickupLocation.Contact,
 					Payment:     "SENDER",
 					Role:        "SHIPPER",
 					SubmittedBy: models.Contact{},
@@ -60,7 +72,7 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 						{
 							Service:        "INTERNATIONAL_ECONOMY_FREIGHT",
 							SequenceNumber: 1,
-							Destination:    toAddress,
+							Destination:    pickup.ToAddress,
 							Packaging:      "BAG",
 							Pieces:         1,
 							Weight: models.Weight{
@@ -82,20 +94,22 @@ func (f Fedex) createPickupRequest(pickupLocation models.PickupLocation, toAddre
 	}
 }
 
-func (f Fedex) pickupTime(pickupAddress models.Address) time.Time {
+func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
 	location, err := toLocation(pickupAddress)
 	if err != nil {
 		location = laTimeZone
 	}
 
-	now := time.Now().In(location)
-	year, month, day := now.Date()
+	pickupTime := time.Now().In(location)
 
-	// If it's past 12pm, ship the next day, not today
-	if now.Hour() > 12 {
-		day++
+	if pickupTime.Hour() >= 12 {
+		// If it's past 12pm, ship the next day, not today
+		pickupTime.Add(24 * time.Hour)
 	}
 
+	pickupTime.Add(time.Duration(numDaysToDelay*24) * time.Hour)
+
+	year, month, day := pickupTime.Date()
 	return time.Date(year, month, day, 12, 0, 0, 0, location)
 }
 

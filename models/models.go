@@ -1,5 +1,9 @@
 package models
 
+import (
+	"fmt"
+)
+
 type Address struct {
 	StreetLines         []string `xml:"q0:StreetLines"`
 	City                string   `xml:"q0:City"`
@@ -23,9 +27,65 @@ type AncillaryDetail struct {
 	ReasonDescription string
 }
 
+type Broker struct {
+	Type string `xml:"q0:Type"`
+}
+
 type Charge struct {
 	Currency string
-	Amount   string
+	Amount   float64
+}
+
+type Commodity struct {
+	Name           string `xml:"q0:Name"`
+	NumberOfPieces int    `xml:"q0:NumberOfPieces"`
+	Description    string `xml:"q0:Description"`
+	// Purpose *string
+	CountryOfManufacture string  `xml:"q0:CountryOfManufacture"`
+	HarmonizedCode       *string `xml:"q0:HarmonizedCode"`
+	Weight               Weight  `xml:"q0:Weight"`
+	Quantity             int     `xml:"q0:Quantity"`
+	QuantityUnits        string  `xml:"q0:QuantityUnits"`
+	// AdditionalMeasure *int
+	UnitPrice                   *Money   `xml:"q0:UnitPrice"`
+	CustomsValue                *Money   `xml:"q0:CustomsValue"`
+	ExportLicenseExpirationDate *string  `xml:"q0:ExportLicenseExpirationDate"`
+	CIMarksAndNumbers           []string `xml:"q0:CIMarksAndNumbers"`
+}
+
+type Commodities []Commodity
+
+func (c Commodities) Weight() Weight {
+	if len(c) == 0 {
+		return Weight{Units: "LB", Value: 0.0}
+	}
+
+	// Assume all the units are the same
+	weight := Weight{
+		Units: c[0].Weight.Units,
+		Value: 0.0,
+	}
+	for _, commodity := range c {
+		weight.Value += commodity.Weight.Value
+	}
+	return weight
+}
+
+func (c Commodities) CustomsValue() (Money, error) {
+	total := Money{Currency: "USD"}
+
+	if len(c) == 0 {
+		return total, nil
+	}
+
+	total.Currency = c[0].CustomsValue.Currency
+	for _, commodity := range c {
+		if commodity.CustomsValue.Currency != total.Currency {
+			return total, fmt.Errorf("mismatching customs currencies: %s %s", commodity.CustomsValue.Currency, total.Currency)
+		}
+		total.Amount += commodity.CustomsValue.Amount
+	}
+	return total, nil
 }
 
 type CompletedPackageDetails struct {
@@ -43,6 +103,7 @@ type CompletedShipmentDetail struct {
 	PackagingDescription    string
 	OperationalDetail       OperationalDetail
 	ShipmentRating          Rating
+	ShipmentDocuments       []ShipmentDocument
 	CompletedPackageDetails CompletedPackageDetails
 }
 
@@ -52,6 +113,16 @@ type CompletedTrackDetail struct {
 	DuplicateWaybill bool
 	MoreData         bool
 	TrackDetails     []TrackDetail
+}
+
+type CommercialInvoice struct {
+	Purpose        string `xml:"q0:Purpose"`
+	OriginatorName string `xml:"q0:OriginatorName"`
+}
+
+type CommercialInvoiceDetail struct {
+	Format              Format               `xml:"q0:Format"`
+	CustomerImageUsages []CustomerImageUsage `xml:"q0:CustomerImageUsages"`
 }
 
 type Contact struct {
@@ -73,9 +144,24 @@ type ContentRecord struct {
 	Description      string
 }
 
+type CustomerImageUsage struct {
+	Type string `xml:"q0:Type"`
+	ID   string `xml:"q0:Id"`
+}
+
 type CustomerReference struct {
 	CustomerReferenceType string `xml:"q0:CustomerReferenceType"`
 	Value                 string `xml:"q0:Value"`
+}
+
+type CustomsClearanceDetail struct {
+	Brokers                        []Broker           `xml:"q0:Brokers"`
+	DutiesPayment                  Payment            `xml:"q0:DutiesPayment"`
+	DocumentContent                *string            `xml:"q0:DocumentContent"`
+	CustomsValue                   *Money             `xml:"q0:CustomsValue"`
+	PartiesToTransactionAreRelated bool               `xml:"q0:PartiesToTransactionAreRelated"`
+	CommercialInvoice              *CommercialInvoice `xml:"q0:CommercialInvoice"`
+	Commodities                    Commodities        `xml:"q0:Commodities"`
 }
 
 type DateOrTimestamp struct {
@@ -103,6 +189,24 @@ type Dimensions struct {
 type EmailDetail struct {
 	EmailAddress string `xml:"q0:EmailAddress"`
 	Name         string `xml:"q0:Name"`
+}
+
+type EtdDetail struct {
+	RequestedDocumentCopies string `xml:"q0:RequestedDocumentCopies"`
+}
+
+type EdtCommodityTax struct {
+	HarmonizedCode string
+	Taxes          []EdtTaxDetail
+}
+
+type EdtTaxDetail struct {
+	TaxType      string
+	Name         string
+	TaxableValue Charge
+	Description  string
+	Formula      string
+	Amount       Charge
 }
 
 type Event struct {
@@ -135,6 +239,11 @@ type EventNotificationDetail struct {
 // 	FormatSpecification FormatSpecification `xml:"q0:FormatSpecification"`
 // }
 
+type Format struct {
+	ImageType string `xml:"q0:ImageType"`
+	StockType string `xml:"q0:StockType"`
+}
+
 type FormatSpecification struct {
 	Type string `xml:"q0:Type"`
 }
@@ -159,9 +268,36 @@ type FreightPickupLineItem struct {
 	Description        string  `xml:"q0:Description"`
 }
 
+// TODO is this needed as its own struct? i don't think so if the Rate itself doesn't decide to do stuff differently for international (rather f Fedex does on the Shipment)
+type FromAndTo struct {
+	FromAddress Address
+	ToAddress   Address
+	FromContact Contact
+	ToContact   Contact
+}
+
+func (ft FromAndTo) IsInternational() bool {
+	fromCountryCode := ft.FromAddress.CountryCode
+	if fromCountryCode == "" {
+		fromCountryCode = "US"
+	}
+
+	toCountryCode := ft.ToAddress.CountryCode
+	if toCountryCode == "" {
+		toCountryCode = "US"
+	}
+
+	return fromCountryCode != toCountryCode
+}
+
 type Identifier struct {
 	Type  string
 	Value string
+}
+
+type Image struct {
+	ID    string `xml:"q0:Id"`
+	Image string `xml:"q0:Image"`
 }
 
 type InformationNoteDetail struct {
@@ -179,12 +315,18 @@ type Label struct {
 }
 
 type LabelSpecification struct {
-	LabelFormatType string `xml:"q0:LabelFormatType"`
-	ImageType       string `xml:"q0:ImageType"`
+	LabelFormatType string  `xml:"q0:LabelFormatType"`
+	ImageType       string  `xml:"q0:ImageType"`
+	LabelStockType  *string `xml:"q0:LabelStockType"`
 }
 
 type Localization struct {
 	LanguageCode string `xml:"q0:LanguageCode"`
+}
+
+type Money struct {
+	Currency string  `xml:"q0:Currency"`
+	Amount   float64 `xml:"q0:Amount"`
 }
 
 type Name struct {
@@ -259,6 +401,7 @@ type RateDetail struct {
 	TotalDutiesTaxesAndFees          Charge
 	TotalNetChargeWithDutiesAndTaxes Charge
 	Surcharges                       []Surcharge
+	DutiesAndTaxes                   []EdtCommodityTax
 }
 
 type RateReplyDetail struct {
@@ -269,7 +412,7 @@ type RateReplyDetail struct {
 	IneligibleForMoneyBackGuarantee bool
 	SignatureOption                 string
 	ActualRateType                  string
-	RatedShipmentDetails            []Rating // TODO
+	RatedShipmentDetails            []Rating
 }
 
 type RatedPackage struct {
@@ -331,13 +474,16 @@ type RequestedShipment struct {
 	Shipper   Shipper `xml:"q0:Shipper"`
 	Recipient Shipper `xml:"q0:Recipient"`
 
-	ShippingChargesPayment    Payment                    `xml:"q0:ShippingChargesPayment"`
-	SpecialServicesRequested  *SpecialServicesRequested  `xml:"q0:SpecialServicesRequested,omitempty"`
-	SmartPostDetail           *SmartPostDetail           `xml:"q0:SmartPostDetail,omitempty"`
-	LabelSpecification        LabelSpecification         `xml:"q0:LabelSpecification"`
-	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
-	PackageCount              int                        `xml:"q0:PackageCount"`
-	RequestedPackageLineItems []RequestedPackageLineItem `xml:"q0:RequestedPackageLineItems"`
+	ShippingChargesPayment        *Payment                       `xml:"q0:ShippingChargesPayment"`
+	SpecialServicesRequested      *SpecialServicesRequested      `xml:"q0:SpecialServicesRequested,omitempty"`
+	SmartPostDetail               *SmartPostDetail               `xml:"q0:SmartPostDetail,omitempty"`
+	CustomsClearanceDetail        *CustomsClearanceDetail        `xml:"q0:CustomsClearanceDetail,omitempty"`
+	LabelSpecification            *LabelSpecification            `xml:"q0:LabelSpecification"`
+	ShippingDocumentSpecification *ShippingDocumentSpecification `xml:"q0:ShippingDocumentSpecification"`
+	RateRequestTypes              *string                        `xml:"q0:RateRequestTypes"`
+	EdtRequestType                *string                        `xml:"q0:EdtRequestType"`
+	PackageCount                  *int                           `xml:"q0:PackageCount"`
+	RequestedPackageLineItems     []RequestedPackageLineItem     `xml:"q0:RequestedPackageLineItems"`
 }
 
 type ResponsibleParty struct {
@@ -383,6 +529,15 @@ type ServiceDescription struct {
 	AstraDescription string
 }
 
+type ShipmentDocument struct {
+	Type                        string
+	ShippingDocumentDisposition string
+	ImageType                   string
+	Resolution                  string
+	CopiesToPrint               string
+	Parts                       []Part
+}
+
 type ShipmentManifestDetail struct {
 	ManifestReferenceType string `xml:"q0:ManifestReferenceType,omitempty"`
 }
@@ -391,6 +546,22 @@ type Shipper struct {
 	AccountNumber string  `xml:"q0:AccountNumber"`
 	Contact       Contact `xml:"q0:Contact"`
 	Address       Address `xml:"q0:Address"`
+}
+
+type ShippingDocumentSpecification struct {
+	ShippingDocumentTypes []string `xml:"q0:ShippingDocumentTypes"`
+	// CertificateOfOrigin                     []CertificateOfOrigin
+	CommercialInvoiceDetail []CommercialInvoiceDetail `xml:"q0:CommercialInvoiceDetail"`
+	// CustomPackageDocumentDetail             []CustomPackageDocumentDetail
+	// CustomShipmentDocumentDetail            []CustomShipmentDocumentDetail
+	// ExportDeclarationDetail                 []ExportDeclarationDetail
+	// GeneralAgencyAgreementDetail            []GeneralAgencyAgreementDetail
+	// NaftaCertificateOfOriginDetail          []NaftaCertificateOfOriginDetail
+	// Op900Detail                             []Op900Detail
+	// DangerousGoodsShippersDeclarationDetail []DangerousGoodsShippersDeclarationDetail
+	// FreightAddressLabelDetail               []FreightAddressLabelDetail
+	// FreightBillOfLadingDetail               []FreightBillOfLadingDetail
+	// ReturnInstructionsDetail                []ReturnInstructionsDetail
 }
 
 type SmartPostDetail struct {
@@ -407,6 +578,7 @@ type SpecialHandling struct {
 
 type SpecialServicesRequested struct {
 	SpecialServiceTypes     []string                 `xml:"q0:SpecialServiceTypes,omitempty"`
+	EtdDetail               *EtdDetail               `xml:"q0:EtdDetail,omitempty"`
 	EventNotificationDetail *EventNotificationDetail `xml:"q0:EventNotificationDetail,omitempty"`
 	ReturnShipmentDetail    *ReturnShipmentDetail    `xml:"q0:ReturnShipmentDetail,omitempty"`
 }
@@ -502,4 +674,8 @@ type TransactionDetail struct {
 type Weight struct {
 	Units string  `xml:"q0:Units"`
 	Value float64 `xml:"q0:Value"`
+}
+
+func (w Weight) IsZero() bool {
+	return w.Value == 0.0
 }
