@@ -1,5 +1,9 @@
 package models
 
+type ProcessShipmentBody struct {
+	ProcessShipmentRequest ProcessShipmentRequest `xml:"q0:ProcessShipmentRequest"`
+}
+
 type ProcessShipmentRequest struct {
 	Request
 	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`

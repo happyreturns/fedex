@@ -25,7 +25,22 @@ type AncillaryDetail struct {
 
 type Charge struct {
 	Currency string
-	Amount   string
+	Amount   float64
+}
+
+type Commodity struct {
+	Name           string `xml:"q0:Name"`
+	NumberOfPieces int    `xml:"q0:NumberOfPieces"`
+	Description    string `xml:"q0:Description"`
+	// Purpose *string
+	CountryOfManufacture string `xml:"q0:CountryOfManufacture"`
+	// HarmonizedCode *string
+	Weight        Weight `xml:"q0:Weight"`
+	Quantity      int    `xml:"q0:Quantity"`
+	QuantityUnits string `xml:"q0:QuantityUnits"`
+	// AdditionalMeasure *int
+	UnitPrice    Money `xml:"q0:UnitPrice"`
+	CustomsValue Money `xml:"q0:CustomsValue"`
 }
 
 type CompletedPackageDetails struct {
@@ -43,6 +58,7 @@ type CompletedShipmentDetail struct {
 	PackagingDescription    string
 	OperationalDetail       OperationalDetail
 	ShipmentRating          Rating
+	ShipmentDocuments       []ShipmentDocument
 	CompletedPackageDetails CompletedPackageDetails
 }
 
@@ -52,6 +68,11 @@ type CompletedTrackDetail struct {
 	DuplicateWaybill bool
 	MoreData         bool
 	TrackDetails     []TrackDetail
+}
+
+type CommercialInvoiceDetail struct {
+	Format              Format               `xml:"q0:Format"`
+	CustomerImageUsages []CustomerImageUsage `xml:"q0:CustomerImageUsages"`
 }
 
 type Contact struct {
@@ -73,9 +94,21 @@ type ContentRecord struct {
 	Description      string
 }
 
+type CustomerImageUsage struct {
+	Type string `xml:"q0:Type"`
+	ID   string `xml:"q0:Id"`
+}
+
 type CustomerReference struct {
 	CustomerReferenceType string `xml:"q0:CustomerReferenceType"`
 	Value                 string `xml:"q0:Value"`
+}
+
+type CustomsClearanceDetail struct {
+	DutiesPayment Payment `xml:"q0:DutiesPayment"`
+	// DocumentContent string
+	CustomsValue Money       `xml:"q0:CustomsValue"`
+	Commodities  []Commodity `xml:"q0:Commodities"`
 }
 
 type DateOrTimestamp struct {
@@ -103,6 +136,10 @@ type Dimensions struct {
 type EmailDetail struct {
 	EmailAddress string `xml:"q0:EmailAddress"`
 	Name         string `xml:"q0:Name"`
+}
+
+type EtdDetail struct {
+	RequestedDocumentCopies string `xml:"q0:RequestedDocumentCopies"`
 }
 
 type Event struct {
@@ -135,6 +172,11 @@ type EventNotificationDetail struct {
 // 	FormatSpecification FormatSpecification `xml:"q0:FormatSpecification"`
 // }
 
+type Format struct {
+	ImageType string `xml:"q0:ImageType"`
+	StockType string `xml:"q0:StockType"`
+}
+
 type FormatSpecification struct {
 	Type string `xml:"q0:Type"`
 }
@@ -164,6 +206,11 @@ type Identifier struct {
 	Value string
 }
 
+type Image struct {
+	ID    string `xml:"q0:Id"`
+	Image string `xml:"q0:Image"`
+}
+
 type InformationNoteDetail struct {
 	Code        string
 	Description string
@@ -179,12 +226,18 @@ type Label struct {
 }
 
 type LabelSpecification struct {
-	LabelFormatType string `xml:"q0:LabelFormatType"`
-	ImageType       string `xml:"q0:ImageType"`
+	LabelFormatType string  `xml:"q0:LabelFormatType"`
+	ImageType       string  `xml:"q0:ImageType"`
+	LabelStockType  *string `xml:"q0:LabelStockType"`
 }
 
 type Localization struct {
 	LanguageCode string `xml:"q0:LanguageCode"`
+}
+
+type Money struct {
+	Currency string  `xml:"q0:Currency"`
+	Amount   float64 `xml:"q0:Amount"`
 }
 
 type Name struct {
@@ -269,7 +322,7 @@ type RateReplyDetail struct {
 	IneligibleForMoneyBackGuarantee bool
 	SignatureOption                 string
 	ActualRateType                  string
-	RatedShipmentDetails            []Rating // TODO
+	RatedShipmentDetails            []Rating
 }
 
 type RatedPackage struct {
@@ -331,13 +384,15 @@ type RequestedShipment struct {
 	Shipper   Shipper `xml:"q0:Shipper"`
 	Recipient Shipper `xml:"q0:Recipient"`
 
-	ShippingChargesPayment    Payment                    `xml:"q0:ShippingChargesPayment"`
-	SpecialServicesRequested  *SpecialServicesRequested  `xml:"q0:SpecialServicesRequested,omitempty"`
-	SmartPostDetail           *SmartPostDetail           `xml:"q0:SmartPostDetail,omitempty"`
-	LabelSpecification        LabelSpecification         `xml:"q0:LabelSpecification"`
-	RateRequestTypes          string                     `xml:"q0:RateRequestTypes"`
-	PackageCount              int                        `xml:"q0:PackageCount"`
-	RequestedPackageLineItems []RequestedPackageLineItem `xml:"q0:RequestedPackageLineItems"`
+	ShippingChargesPayment        Payment                        `xml:"q0:ShippingChargesPayment"`
+	SpecialServicesRequested      *SpecialServicesRequested      `xml:"q0:SpecialServicesRequested,omitempty"`
+	SmartPostDetail               *SmartPostDetail               `xml:"q0:SmartPostDetail,omitempty"`
+	CustomsClearanceDetail        *CustomsClearanceDetail        `xml:"q0:CustomsClearanceDetail,omitempty"`
+	LabelSpecification            LabelSpecification             `xml:"q0:LabelSpecification"`
+	ShippingDocumentSpecification *ShippingDocumentSpecification `xml:"q0:ShippingDocumentSpecification"`
+	RateRequestTypes              *string                        `xml:"q0:RateRequestTypes"`
+	PackageCount                  int                            `xml:"q0:PackageCount"`
+	RequestedPackageLineItems     []RequestedPackageLineItem     `xml:"q0:RequestedPackageLineItems"`
 }
 
 type ResponsibleParty struct {
@@ -383,6 +438,15 @@ type ServiceDescription struct {
 	AstraDescription string
 }
 
+type ShipmentDocument struct {
+	Type                        string
+	ShippingDocumentDisposition string
+	ImageType                   string
+	Resolution                  string
+	CopiesToPrint               string
+	Parts                       []Part
+}
+
 type ShipmentManifestDetail struct {
 	ManifestReferenceType string `xml:"q0:ManifestReferenceType,omitempty"`
 }
@@ -391,6 +455,22 @@ type Shipper struct {
 	AccountNumber string  `xml:"q0:AccountNumber"`
 	Contact       Contact `xml:"q0:Contact"`
 	Address       Address `xml:"q0:Address"`
+}
+
+type ShippingDocumentSpecification struct {
+	ShippingDocumentTypes []string `xml:"q0:ShippingDocumentTypes"`
+	// CertificateOfOrigin                     []CertificateOfOrigin
+	CommercialInvoiceDetail []CommercialInvoiceDetail `xml:"q0:CommercialInvoiceDetail"`
+	// CustomPackageDocumentDetail             []CustomPackageDocumentDetail
+	// CustomShipmentDocumentDetail            []CustomShipmentDocumentDetail
+	// ExportDeclarationDetail                 []ExportDeclarationDetail
+	// GeneralAgencyAgreementDetail            []GeneralAgencyAgreementDetail
+	// NaftaCertificateOfOriginDetail          []NaftaCertificateOfOriginDetail
+	// Op900Detail                             []Op900Detail
+	// DangerousGoodsShippersDeclarationDetail []DangerousGoodsShippersDeclarationDetail
+	// FreightAddressLabelDetail               []FreightAddressLabelDetail
+	// FreightBillOfLadingDetail               []FreightBillOfLadingDetail
+	// ReturnInstructionsDetail                []ReturnInstructionsDetail
 }
 
 type SmartPostDetail struct {
@@ -407,6 +487,7 @@ type SpecialHandling struct {
 
 type SpecialServicesRequested struct {
 	SpecialServiceTypes     []string                 `xml:"q0:SpecialServiceTypes,omitempty"`
+	EtdDetail               *EtdDetail               `xml:"q0:EtdDetail,omitempty"`
 	EventNotificationDetail *EventNotificationDetail `xml:"q0:EventNotificationDetail,omitempty"`
 	ReturnShipmentDetail    *ReturnShipmentDetail    `xml:"q0:ReturnShipmentDetail,omitempty"`
 }

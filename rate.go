@@ -7,6 +7,7 @@ import (
 )
 
 func (f Fedex) rateRequest(fromLocation, toLocation models.Address, fromContact, toContact models.Contact) models.Envelope {
+	rateRequestTypes := "LIST"
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/rate/v24",
@@ -24,6 +25,9 @@ func (f Fedex) rateRequest(fromLocation, toLocation models.Address, fromContact,
 					ClientDetail: models.ClientDetail{
 						AccountNumber: f.Account,
 						MeterNumber:   f.Meter,
+					},
+					TransactionDetail: &models.TransactionDetail{
+						CustomerTransactionID: "Upload Images Example",
 					},
 					Version: models.Version{
 						ServiceID: "crs",
@@ -57,7 +61,7 @@ func (f Fedex) rateRequest(fromLocation, toLocation models.Address, fromContact,
 						LabelFormatType: "COMMON2D",
 						ImageType:       "PDF",
 					},
-					RateRequestTypes: "LIST",
+					RateRequestTypes: &rateRequestTypes,
 					PackageCount:     1,
 					RequestedPackageLineItems: []models.RequestedPackageLineItem{
 						{

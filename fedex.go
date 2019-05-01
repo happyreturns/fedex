@@ -45,6 +45,10 @@ type Shipment struct {
 	ToContact         models.Contact
 	NotificationEmail string
 	Reference         string
+	ServiceType       string
+
+	// Only used for international ground shipments
+	Commodities []models.Commodity
 }
 
 // TrackByNumber returns tracking info for a specific Fedex tracking number
@@ -57,39 +61,6 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.Tra
 	if err != nil {
 		return nil, fmt.Errorf("make track request and unmarshal: %s", err)
 	}
-	return &response.Reply, nil
-}
-
-// ShipGround creates a ground shipment
-func (f Fedex) ShipGround(shipment *Shipment) (*models.ProcessShipmentReply, error) {
-
-	request, err := f.shipmentRequest("FEDEX_GROUND", shipment)
-	if err != nil {
-		return nil, fmt.Errorf("create shipment request: %s", err)
-	}
-
-	response := &models.ShipResponseEnvelope{}
-	err = f.makeRequestAndUnmarshalResponse("/ship/v23", request, response)
-	if err != nil {
-		return nil, fmt.Errorf("make ship ground request and unmarshal: %s", err)
-	}
-	return &response.Reply, nil
-}
-
-// ShipSmartPost creates a Smart Post return shipment
-func (f Fedex) ShipSmartPost(shipment *Shipment) (*models.ProcessShipmentReply, error) {
-
-	request, err := f.shipmentRequest("SMART_POST", shipment)
-	if err != nil {
-		return nil, fmt.Errorf("create shipment request: %s", err)
-	}
-
-	response := &models.ShipResponseEnvelope{}
-	err = f.makeRequestAndUnmarshalResponse("/ship/v23", request, response)
-	if err != nil {
-		return nil, fmt.Errorf("make ship smart post request and unmarshal: %s", err)
-	}
-
 	return &response.Reply, nil
 }
 
@@ -132,8 +103,46 @@ func (f Fedex) SendNotifications(trackingNo, email string) (*models.SendNotifica
 	if err != nil {
 		return nil, fmt.Errorf("make send notifications request: %s", err)
 	}
+	return &response.Reply, nil
+}
+
+// ShipGround creates a ground shipment
+func (f Fedex) ShipGround(shipment *Shipment) (*models.ProcessShipmentReply, error) {
+	shipment.ServiceType = "FEDEX_GROUND"
+	return f.ship(shipment)
+}
+
+// ShipSmartPost creates a Smart Post return shipment
+func (f Fedex) ShipSmartPost(shipment *Shipment) (*models.ProcessShipmentReply, error) {
+	shipment.ServiceType = "SMART_POST"
+	return f.ship(shipment)
+}
+
+func (f Fedex) ship(shipment *Shipment) (*models.ProcessShipmentReply, error) {
+	request, err := f.createProcessShipmentRequest(shipment)
+	if err != nil {
+		return nil, fmt.Errorf("create process shipment request: %s", err) // TODO test me
+	}
+
+	response := &models.ShipResponseEnvelope{}
+	if err := f.makeRequestAndUnmarshalResponse("/ship/v23", request, response); err != nil {
+		return nil, fmt.Errorf("make process shipment request and unmarshal: %s", err)
+	}
 
 	return &response.Reply, nil
+}
+
+// TODO get me to work
+func (f Fedex) UploadImages(images []models.Image) error {
+	request := f.uploadImagesRequest(images)
+
+	response := &models.UploadImagesResponseEnvelope{}
+	if err := f.makeRequestAndUnmarshalResponse("/cdus/12", request, response); err != nil {
+		return fmt.Errorf("make upload images request and unmarshal: %s", err)
+	}
+
+	return nil
+
 }
 
 func (f Fedex) makeRequestAndUnmarshalResponse(url string, request models.Envelope,

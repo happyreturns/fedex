@@ -2,6 +2,10 @@ package models
 
 import "errors"
 
+const (
+	RateRequestType = "LIST"
+)
+
 type RateRequest struct {
 	Request
 	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`
@@ -28,7 +32,7 @@ func (rr *RateReply) TotalCost() (Charge, error) {
 	for _, rateReplyDetail := range rr.RateReplyDetails {
 		for _, ratedShipmentDetail := range rateReplyDetail.RatedShipmentDetails {
 			totalNetCharge := ratedShipmentDetail.ShipmentRateDetail.TotalNetChargeWithDutiesAndTaxes
-			if totalNetCharge.Currency != "" && totalNetCharge.Amount != "" {
+			if totalNetCharge.Currency != "" && totalNetCharge.Amount != 0.0 {
 				return totalNetCharge, nil
 			}
 		}

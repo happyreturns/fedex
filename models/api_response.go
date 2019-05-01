@@ -6,6 +6,7 @@ import (
 
 const (
 	notificationSeverityError   = "ERROR"
+	notificationSeverityNote    = "NOTE"
 	notificationSeveritySuccess = "SUCCESS"
 )
 
@@ -22,7 +23,8 @@ type Reply struct {
 }
 
 func (r Reply) Error() error {
-	if r.HighestSeverity == notificationSeveritySuccess {
+	if r.HighestSeverity == notificationSeveritySuccess ||
+		r.HighestSeverity == notificationSeverityNote {
 		return nil
 	}
 
