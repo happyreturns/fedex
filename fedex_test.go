@@ -199,7 +199,7 @@ func TestRate(t *testing.T) {
 
 func TestShipGround(t *testing.T) {
 	// Error case - invalid shipment
-	_, err := prodFedex.ShipGround(&Shipment{})
+	_, err := prodFedex.Ship(&Shipment{})
 	checkErrorMatches(t, err, "make process shipment request and unmarshal: response error: reply got error:")
 
 	// Successful case
@@ -230,8 +230,9 @@ func TestShipGround(t *testing.T) {
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
 		Reference:         "My ship ground reference",
+		Service:           "default",
 	}
-	reply, err := prodFedex.ShipGround(exampleShipment)
+	reply, err := prodFedex.Ship(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +297,7 @@ func TestShipGround(t *testing.T) {
 
 	// it also works with no email
 	exampleShipment.NotificationEmail = ""
-	reply, err = prodFedex.ShipGround(exampleShipment)
+	reply, err = prodFedex.Ship(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -378,7 +379,7 @@ func TestShipInternational(t *testing.T) {
 }
 
 func testShipInternational(t *testing.T, shipment *Shipment) {
-	reply, err := prodFedex.ShipGround(shipment)
+	reply, err := prodFedex.Ship(shipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -521,8 +522,9 @@ func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
 		Reference:         "My reference",
+		Service:           "return",
 	}
-	reply, err := fedexAccount.ShipSmartPost(exampleShipment)
+	reply, err := fedexAccount.Ship(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -575,7 +577,7 @@ func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 
 	// It also works with no email
 	exampleShipment.NotificationEmail = ""
-	reply, err = fedexAccount.ShipSmartPost(exampleShipment)
+	reply, err = fedexAccount.Ship(exampleShipment)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,9 +8,6 @@ import (
 )
 
 func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope, error) {
-	if shipment.ServiceType != "FEDEX_GROUND" && shipment.ServiceType != "SMART_POST" {
-		return models.Envelope{}, fmt.Errorf("invalid ServiceType: %s", shipment.ServiceType)
-	}
 
 	customsClearanceDetail, err := f.customsClearanceDetail(shipment)
 	if err != nil {
@@ -37,7 +34,7 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 		RequestedShipment: models.RequestedShipment{
 			ShipTimestamp: models.Timestamp(time.Now()),
 			DropoffType:   dropoffType(shipment),
-			ServiceType:   shipment.ServiceType,
+			ServiceType:   serviceType(shipment),
 			PackagingType: "YOUR_PACKAGING",
 			Shipper: models.Shipper{
 				AccountNumber: f.Account,
@@ -77,7 +74,7 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 }
 
 func (f Fedex) smartPostDetail(shipment *Shipment) *models.SmartPostDetail {
-	if shipment.ServiceType == "SMART_POST" {
+	if serviceType(shipment) == "SMART_POST" {
 		return &models.SmartPostDetail{
 			Indicia:              "PARCEL_RETURN",
 			AncillaryEndorsement: "ADDRESS_CORRECTION",
@@ -87,8 +84,18 @@ func (f Fedex) smartPostDetail(shipment *Shipment) *models.SmartPostDetail {
 	return nil
 }
 
+func serviceType(shipment *Shipment) string {
+	switch {
+	case shipment.Service == "fedex_smart_post",
+		shipment.Service == "return" && !isInternational(shipment):
+		return "SMART_POST"
+	default:
+		return "FEDEX_GROUND"
+	}
+}
+
 func shippingDocumentSpecification(shipment *Shipment) *models.ShippingDocumentSpecification {
-	if shipment.ServiceType != "SMART_POST" && isInternational(shipment) {
+	if serviceType(shipment) != "SMART_POST" && isInternational(shipment) {
 		return &models.ShippingDocumentSpecification{
 			ShippingDocumentTypes: []string{"COMMERCIAL_INVOICE"},
 			CommercialInvoiceDetail: []models.CommercialInvoiceDetail{
@@ -115,7 +122,7 @@ func shippingDocumentSpecification(shipment *Shipment) *models.ShippingDocumentS
 }
 
 func labelSpecification(shipment *Shipment) models.LabelSpecification {
-	if shipment.ServiceType == "FEDEX_GROUND" && isInternational(shipment) {
+	if serviceType(shipment) == "FEDEX_GROUND" && isInternational(shipment) {
 		stockType := "PAPER_4X6"
 		return models.LabelSpecification{
 			LabelFormatType: "COMMON2D",
@@ -163,7 +170,7 @@ func weight(shipment *Shipment) models.Weight {
 		return weight
 	}
 
-	switch shipment.ServiceType {
+	switch serviceType(shipment) {
 	case "SMART_POST":
 		return models.Weight{Units: "LB", Value: 0.99}
 	default:
@@ -172,7 +179,7 @@ func weight(shipment *Shipment) models.Weight {
 }
 
 func dimensions(shipment *Shipment) models.Dimensions {
-	switch shipment.ServiceType {
+	switch serviceType(shipment) {
 	case "SMART_POST":
 		return models.Dimensions{Length: 6, Width: 5, Height: 5, Units: "IN"}
 	default:
@@ -211,7 +218,7 @@ func defaultEventNotificationDetail(notificationEmail string) *models.EventNotif
 
 func specialServicesRequested(shipment *Shipment) *models.SpecialServicesRequested {
 	var specialServicesRequested *models.SpecialServicesRequested
-	switch shipment.ServiceType {
+	switch serviceType(shipment) {
 	case "SMART_POST":
 		specialServicesRequested = &models.SpecialServicesRequested{
 			SpecialServiceTypes: []string{"RETURN_SHIPMENT"},
@@ -243,7 +250,7 @@ func specialServicesRequested(shipment *Shipment) *models.SpecialServicesRequest
 }
 
 func customerReference(shipment *Shipment) models.CustomerReference {
-	switch shipment.ServiceType {
+	switch serviceType(shipment) {
 	case "SMART_POST":
 		return models.CustomerReference{
 			CustomerReferenceType: "RMA_ASSOCIATION",

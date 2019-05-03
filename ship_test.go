@@ -31,13 +31,6 @@ var (
 	}
 )
 
-func TestInvalidServiceType(t *testing.T) {
-	_, err := shipmentTestFedex.createProcessShipmentRequest(&Shipment{
-		ServiceType: "INVALID_SERVICE_TYPE",
-	})
-	checkErrorMatches(t, err, "invalid ServiceType: INVALID_SERVICE_TYPE")
-}
-
 func TestGroundShipmentNotInternational(t *testing.T) {
 	shipment := &Shipment{
 		FromAddress: models.Address{
@@ -65,7 +58,7 @@ func TestGroundShipmentNotInternational(t *testing.T) {
 		},
 		NotificationEmail: "NotificationEmail",
 		Reference:         "REF",
-		ServiceType:       "FEDEX_GROUND",
+		Service:           "FEDEX_GROUND",
 	}
 	envelope, err := shipmentTestFedex.createProcessShipmentRequest(shipment)
 	if err != nil {
@@ -193,7 +186,7 @@ func TestGroundShipmentInternational(t *testing.T) {
 		},
 		NotificationEmail: "NotificationEmail",
 		Reference:         "REF",
-		ServiceType:       "FEDEX_GROUND",
+		Service:           "FEDEX_GROUND",
 		Commodities:       commodities,
 	}
 	envelope, err := shipmentTestFedex.createProcessShipmentRequest(shipment)

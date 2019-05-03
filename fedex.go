@@ -45,7 +45,7 @@ type Shipment struct {
 	ToContact         models.Contact
 	NotificationEmail string
 	Reference         string
-	ServiceType       string
+	Service           string
 
 	// Only used for international ground shipments
 	Commodities []models.Commodity
@@ -106,19 +106,7 @@ func (f Fedex) SendNotifications(trackingNo, email string) (*models.SendNotifica
 	return &response.Reply, nil
 }
 
-// ShipGround creates a ground shipment
-func (f Fedex) ShipGround(shipment *Shipment) (*models.ProcessShipmentReply, error) {
-	shipment.ServiceType = "FEDEX_GROUND"
-	return f.ship(shipment)
-}
-
-// ShipSmartPost creates a Smart Post return shipment
-func (f Fedex) ShipSmartPost(shipment *Shipment) (*models.ProcessShipmentReply, error) {
-	shipment.ServiceType = "SMART_POST"
-	return f.ship(shipment)
-}
-
-func (f Fedex) ship(shipment *Shipment) (*models.ProcessShipmentReply, error) {
+func (f Fedex) Ship(shipment *Shipment) (*models.ProcessShipmentReply, error) {
 	request, err := f.createProcessShipmentRequest(shipment)
 	if err != nil {
 		return nil, fmt.Errorf("create process shipment request: %s", err) // TODO test me
