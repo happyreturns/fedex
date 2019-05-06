@@ -205,7 +205,7 @@ func TestActual(t *testing.T) {
 		panic(err)
 	}
 
-	testShipInternational(t, &shipment)
+	testShipInternational(t, prodFedex, &shipment)
 
 }
 
@@ -359,6 +359,8 @@ func TestShipInternational(t *testing.T) {
 			{
 				NumberOfPieces:       1,
 				Description:          "Computer Keyboard",
+				Quantity:             1,
+				QuantityUnits:        "unit",
 				CountryOfManufacture: "US",
 				Weight:               models.Weight{Units: "LB", Value: 10.0},
 				UnitPrice:            models.Money{Currency: "USD", Amount: 25.00},
@@ -367,6 +369,8 @@ func TestShipInternational(t *testing.T) {
 			{
 				NumberOfPieces:       1,
 				Description:          "Computer Monitor",
+				Quantity:             1,
+				QuantityUnits:        "unit",
 				CountryOfManufacture: "US",
 				Weight:               models.Weight{Units: "LB", Value: 5.0},
 				UnitPrice:            models.Money{Currency: "USD", Amount: 214.42},
@@ -375,23 +379,33 @@ func TestShipInternational(t *testing.T) {
 		},
 	}
 
+	exampleShipment.ToContact.CompanyName = "dev"
+	testShipInternational(t, testFedex, exampleShipment)
+
+	t.SkipNow()
 	exampleShipment.ToContact.CompanyName = "normal"
-	testShipInternational(t, exampleShipment)
+	testShipInternational(t, prodFedex, exampleShipment)
+
+	// it also works with smartpost la account
+	testShipInternational(t, laSmartPostFedex, exampleShipment)
+
+	// it also works with smartpost pa account
+	testShipInternational(t, blandonSmartPostFedex, exampleShipment)
 
 	// it also works with no email
 	exampleShipment.NotificationEmail = ""
 	exampleShipment.ToContact.CompanyName = "no-email"
-	testShipInternational(t, exampleShipment)
+	testShipInternational(t, prodFedex, exampleShipment)
 
 	// it also works with no commodities
 	exampleShipment.Commodities = nil
 	exampleShipment.ToContact.CompanyName = "no-commodities"
-	testShipInternational(t, exampleShipment)
+	testShipInternational(t, prodFedex, exampleShipment)
 
 }
 
-func testShipInternational(t *testing.T, shipment *Shipment) {
-	reply, err := prodFedex.Ship(shipment)
+func testShipInternational(t *testing.T, f Fedex, shipment *Shipment) {
+	reply, err := f.Ship(shipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -411,7 +425,7 @@ func testShipInternational(t *testing.T, shipment *Shipment) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("output-ground-international-label-%s-%s.pdf", shipment.ToContact.CompanyName, prodFedex.Key), data, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("output-international-label-%s-%s.pdf", shipment.ToContact.CompanyName, f.Key), data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

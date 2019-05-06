@@ -274,6 +274,9 @@ func (f Fedex) customsClearanceDetail(shipment *Shipment) (*models.CustomsCleara
 	}
 
 	return &models.CustomsClearanceDetail{
+		Brokers: []models.Broker{{
+			Type: "IMPORT",
+		}},
 		DutiesPayment: models.Payment{
 			PaymentType: "SENDER",
 			Payor: models.Payor{
@@ -282,8 +285,12 @@ func (f Fedex) customsClearanceDetail(shipment *Shipment) (*models.CustomsCleara
 				},
 			},
 		},
-		CustomsValue: customsValue,
-		Commodities:  shipment.Commodities,
+		CustomsValue:                   customsValue,
+		Commodities:                    shipment.Commodities,
+		PartiesToTransactionAreRelated: false,
+		CommercialInvoice: models.CommercialInvoice{
+			Purpose: "REPAIR_AND_RETURN",
+		},
 	}, nil
 }
 

@@ -2,10 +2,6 @@ package models
 
 import "errors"
 
-const (
-	RateRequestType = "LIST"
-)
-
 type RateRequest struct {
 	Request
 	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`

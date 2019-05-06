@@ -23,6 +23,10 @@ type AncillaryDetail struct {
 	ReasonDescription string
 }
 
+type Broker struct {
+	Type string `xml:"q0:Type"`
+}
+
 type Charge struct {
 	Currency string
 	Amount   float64
@@ -39,8 +43,10 @@ type Commodity struct {
 	Quantity      int    `xml:"q0:Quantity"`
 	QuantityUnits string `xml:"q0:QuantityUnits"`
 	// AdditionalMeasure *int
-	UnitPrice    Money `xml:"q0:UnitPrice"`
-	CustomsValue Money `xml:"q0:CustomsValue"`
+	UnitPrice                   Money      `xml:"q0:UnitPrice"`
+	CustomsValue                Money      `xml:"q0:CustomsValue"`
+	ExportLicenseExpirationDate *Timestamp `xml:"q0:ExportLicenseExpirationDate"`
+	CIMarksAndNumbers           []string   `xml:"q0:CIMarksAndNumbers"`
 }
 
 type CompletedPackageDetails struct {
@@ -68,6 +74,10 @@ type CompletedTrackDetail struct {
 	DuplicateWaybill bool
 	MoreData         bool
 	TrackDetails     []TrackDetail
+}
+
+type CommercialInvoice struct {
+	Purpose string `xml:"q0:Purpose"`
 }
 
 type CommercialInvoiceDetail struct {
@@ -105,10 +115,13 @@ type CustomerReference struct {
 }
 
 type CustomsClearanceDetail struct {
-	DutiesPayment Payment `xml:"q0:DutiesPayment"`
+	Brokers       []Broker `xml:"q0:Brokers"`
+	DutiesPayment Payment  `xml:"q0:DutiesPayment"`
 	// DocumentContent string
-	CustomsValue Money       `xml:"q0:CustomsValue"`
-	Commodities  []Commodity `xml:"q0:Commodities"`
+	CustomsValue                   Money             `xml:"q0:CustomsValue"`
+	PartiesToTransactionAreRelated bool              `xml:"q0:PartiesToTransactionAreRelated"`
+	CommercialInvoice              CommercialInvoice `xml:"q0:CommercialInvoice"`
+	Commodities                    []Commodity       `xml:"q0:Commodities"`
 }
 
 type DateOrTimestamp struct {
