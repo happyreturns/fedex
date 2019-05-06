@@ -435,7 +435,7 @@ func testShipInternational(t *testing.T, f Fedex, shipment *Shipment) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("output-ground-international-invoice-%s-%s.pdf", shipment.ToContact.CompanyName, prodFedex.Key), data, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("output-international-invoice-%s-%s.pdf", shipment.ToContact.CompanyName, f.Key), data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

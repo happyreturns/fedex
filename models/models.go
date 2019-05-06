@@ -43,10 +43,10 @@ type Commodity struct {
 	Quantity      int    `xml:"q0:Quantity"`
 	QuantityUnits string `xml:"q0:QuantityUnits"`
 	// AdditionalMeasure *int
-	UnitPrice                   Money      `xml:"q0:UnitPrice"`
-	CustomsValue                Money      `xml:"q0:CustomsValue"`
-	ExportLicenseExpirationDate *Timestamp `xml:"q0:ExportLicenseExpirationDate"`
-	CIMarksAndNumbers           []string   `xml:"q0:CIMarksAndNumbers"`
+	UnitPrice                   Money    `xml:"q0:UnitPrice"`
+	CustomsValue                Money    `xml:"q0:CustomsValue"`
+	ExportLicenseExpirationDate *string  `xml:"q0:ExportLicenseExpirationDate"`
+	CIMarksAndNumbers           []string `xml:"q0:CIMarksAndNumbers"`
 }
 
 type CompletedPackageDetails struct {
