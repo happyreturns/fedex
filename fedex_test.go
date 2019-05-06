@@ -197,6 +197,18 @@ func TestRate(t *testing.T) {
 	}
 }
 
+func TestActual(t *testing.T) {
+	t.SkipNow()
+	myBytes := []byte(`{"FromAddress":{"StreetLines":["1290 Rue Belvédère S",""],"City":"Sherbrooke","StateOrProvinceCode":"QC","PostalCode":"J1H 4C7","CountryCode":"CA","Residential":false},"ToAddress":{"StreetLines":["1106 Broadway",""],"City":"Santa Monica","StateOrProvinceCode":"CA","PostalCode":"90401","CountryCode":"US","Residential":false},"FromContact":{"PersonName":"Jenny","CompanyName":"Jenny","PhoneNumber":"1 (214) 867-5309","EmailAddress":""},"ToContact":{"PersonName":"Happy Returns","CompanyName":"Happy Returns","PhoneNumber":"424 325 9510","EmailAddress":""},"NotificationEmail":"","Reference":"","Service":"return","Commodities":[{"Name":"","NumberOfPieces":0,"Description":"","CountryOfManufacture":"","Weight":{"Units":"LB","Value":2},"Quantity":0,"QuantityUnits":"","UnitPrice":{"Currency":"USD","Amount":128},"CustomsValue":{"Currency":"USD","Amount":128}}]}`)
+	shipment := Shipment{}
+	if err := json.Unmarshal(myBytes, &shipment); err != nil {
+		panic(err)
+	}
+
+	testShipInternational(t, &shipment)
+
+}
+
 func TestShipGround(t *testing.T) {
 	// Error case - invalid shipment
 	_, err := prodFedex.Ship(&Shipment{})

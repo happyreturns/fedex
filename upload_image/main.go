@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/happyreturns/fedex"
@@ -25,9 +26,24 @@ func main() {
 		panic(err)
 	}
 
+	///////////////////////////////////////////////////// COMM INVOICE STUFF
+	commInvoiceData, err := ioutil.ReadFile("../commercialencoded.txt")
+	if err != nil {
+		panic(err)
+	}
+	data, err := base64.StdEncoding.DecodeString(string(commInvoiceData))
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile(fmt.Sprintf("commercial-invoice.pdf"), data, 0644)
+	if err != nil {
+		panic(err)
+	}
+	///////////////////////////////////////////////////
+
 	prodFedex := creds["prod"]
 
-	prodFedex.Upload([]models.Image{
+	prodFedex.UploadImages([]models.Image{
 		{
 			ID:    "IMAGE_1",
 			Image: letterhead,

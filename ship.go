@@ -8,7 +8,6 @@ import (
 )
 
 func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope, error) {
-
 	customsClearanceDetail, err := f.customsClearanceDetail(shipment)
 	if err != nil {
 		return models.Envelope{}, fmt.Errorf("get customs clearance detail: %s", err) // TODO test this error
