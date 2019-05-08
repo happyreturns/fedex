@@ -53,6 +53,16 @@ func (tr *TrackReply) EstimatedDelivery() *time.Time {
 	return tr.searchDatesOrTimes("ESTIMATED_DELIVERY")
 }
 
+func (tr *TrackReply) Status() string {
+	for _, completedTrackDetail := range tr.CompletedTrackDetails {
+		for _, trackDetail := range completedTrackDetail.TrackDetails {
+			return ShippingStatusMap[trackDetail.StatusDetail.Code]
+		}
+	}
+
+	return ""
+}
+
 // Ship returns the first SHIP timestamp
 func (tr *TrackReply) Ship() *time.Time {
 	pickupTime := tr.searchEvents("PU")
