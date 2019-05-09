@@ -129,31 +129,39 @@ func TestTrack(t *testing.T) {
 
 func TestRate(t *testing.T) {
 	// Error case - invalid request
-	_, err := prodFedex.Rate(models.Address{}, models.Address{}, models.Contact{}, models.Contact{})
+	_, err := prodFedex.Rate(&RateRequest{})
 	checkErrorMatches(t, err, "make rate request and unmarshal: response error: reply got error:")
 
 	// Successful case
-	reply, err := prodFedex.Rate(models.Address{
-		StreetLines:         []string{"1517 Lincoln Blvd"},
-		City:                "Santa Monica",
-		StateOrProvinceCode: "CA",
-		PostalCode:          "90401",
-		CountryCode:         "US",
-	}, models.Address{
-		StreetLines:         []string{"1106 Broadway"},
-		City:                "Santa Monica",
-		StateOrProvinceCode: "CA",
-		PostalCode:          "90401",
-		CountryCode:         "US",
-	}, models.Contact{
-		PersonName:   "Jenny",
-		PhoneNumber:  "213 867 5309",
-		EmailAddress: "jenny@jenny.com",
-	}, models.Contact{
-		CompanyName:  "Some Company",
-		PhoneNumber:  "214 867 5309",
-		EmailAddress: "somecompany@somecompany.com",
-	})
+	reply, err := prodFedex.Rate(
+		&RateRequest{
+			FromAndTo: FromAndTo{
+				FromAddress: models.Address{
+					StreetLines:         []string{"1517 Lincoln Blvd"},
+					City:                "Santa Monica",
+					StateOrProvinceCode: "CA",
+					PostalCode:          "90401",
+					CountryCode:         "US",
+				},
+				ToAddress: models.Address{
+					StreetLines:         []string{"1106 Broadway"},
+					City:                "Santa Monica",
+					StateOrProvinceCode: "CA",
+					PostalCode:          "90401",
+					CountryCode:         "US",
+				},
+				FromContact: models.Contact{
+					PersonName:   "Jenny",
+					PhoneNumber:  "213 867 5309",
+					EmailAddress: "jenny@jenny.com",
+				},
+				ToContact: models.Contact{
+					CompanyName:  "Some Company",
+					PhoneNumber:  "214 867 5309",
+					EmailAddress: "somecompany@somecompany.com",
+				},
+			},
+		})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,29 +224,31 @@ func TestShipGround(t *testing.T) {
 
 	// Successful case
 	exampleShipment := &Shipment{
-		FromAddress: models.Address{
-			StreetLines:         []string{"1517 Lincoln Blvd"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
-		},
-		ToAddress: models.Address{
-			StreetLines:         []string{"1106 Broadway"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
-		},
-		FromContact: models.Contact{
-			PersonName:   "Jenny",
-			PhoneNumber:  "213 867 5309",
-			EmailAddress: "jenny@jenny.com",
-		},
-		ToContact: models.Contact{
-			CompanyName:  "Some Company",
-			PhoneNumber:  "214 867 5309",
-			EmailAddress: "somecompany@somecompany.com",
+		FromAndTo: FromAndTo{
+			FromAddress: models.Address{
+				StreetLines:         []string{"1517 Lincoln Blvd"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
+			ToAddress: models.Address{
+				StreetLines:         []string{"1106 Broadway"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
+			FromContact: models.Contact{
+				PersonName:   "Jenny",
+				PhoneNumber:  "213 867 5309",
+				EmailAddress: "jenny@jenny.com",
+			},
+			ToContact: models.Contact{
+				CompanyName:  "Some Company",
+				PhoneNumber:  "214 867 5309",
+				EmailAddress: "somecompany@somecompany.com",
+			},
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
 		Reference:         "My ship ground reference",
@@ -327,31 +337,35 @@ func TestShipSmartPost(t *testing.T) {
 }
 
 func TestShipInternational(t *testing.T) {
+	fedex := testFedex
 	// Successful case
+	harmonizedCode := "640399206000" // TODO
 	exampleShipment := &Shipment{
-		FromAddress: models.Address{
-			StreetLines:         []string{"1234 Main Street", "Suite 200"},
-			City:                "Winnipeg",
-			StateOrProvinceCode: "MB",
-			PostalCode:          "R2M4B5",
-			CountryCode:         "CA",
-		},
-		ToAddress: models.Address{
-			StreetLines:         []string{"1106 Broadway"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
-		},
-		FromContact: models.Contact{
-			PersonName:   "Jenny",
-			PhoneNumber:  "213 867 5309",
-			EmailAddress: "jenny@jenny.com",
-		},
-		ToContact: models.Contact{
-			CompanyName:  "normal",
-			PhoneNumber:  "214 867 5309",
-			EmailAddress: "somecompany@somecompany.com",
+		FromAndTo: FromAndTo{
+			FromAddress: models.Address{
+				StreetLines:         []string{"1234 Main Street", "Suite 200"},
+				City:                "Winnipeg",
+				StateOrProvinceCode: "MB",
+				PostalCode:          "R2M4B5",
+				CountryCode:         "CA",
+			},
+			ToAddress: models.Address{
+				StreetLines:         []string{"1106 Broadway"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
+			FromContact: models.Contact{
+				PersonName:   "Jenny",
+				PhoneNumber:  "213 867 5309",
+				EmailAddress: "jenny@jenny.com",
+			},
+			ToContact: models.Contact{
+				CompanyName:  "normal",
+				PhoneNumber:  "214 867 5309",
+				EmailAddress: "somecompany@somecompany.com",
+			},
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
 		Reference:         "My ship ground reference",
@@ -364,7 +378,8 @@ func TestShipInternational(t *testing.T) {
 				CountryOfManufacture: "US",
 				Weight:               models.Weight{Units: "LB", Value: 10.0},
 				UnitPrice:            models.Money{Currency: "USD", Amount: 25.00},
-				CustomsValue:         models.Money{Currency: "USD", Amount: 30.00},
+				CustomsValue:         &models.Money{Currency: "USD", Amount: 30.00},
+				HarmonizedCode:       &harmonizedCode,
 			},
 			{
 				NumberOfPieces:       1,
@@ -528,23 +543,25 @@ func TestSendNotifications(t *testing.T) {
 
 func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 	exampleShipment := &Shipment{
-		FromAddress: models.Address{
-			StreetLines:         []string{"1517 Lincoln Blvd"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
-		},
-		ToAddress: models.Address{},
-		FromContact: models.Contact{
-			PersonName:   "Jenny",
-			PhoneNumber:  "213 867 5309",
-			EmailAddress: "jenny@jenny.com",
-		},
-		ToContact: models.Contact{
-			CompanyName:  "Some Company",
-			PhoneNumber:  "214 867 5309",
-			EmailAddress: "somecompany@somecompany.com",
+		FromAndTo: FromAndTo{
+			FromAddress: models.Address{
+				StreetLines:         []string{"1517 Lincoln Blvd"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
+			ToAddress: models.Address{},
+			FromContact: models.Contact{
+				PersonName:   "Jenny",
+				PhoneNumber:  "213 867 5309",
+				EmailAddress: "jenny@jenny.com",
+			},
+			ToContact: models.Contact{
+				CompanyName:  "Some Company",
+				PhoneNumber:  "214 867 5309",
+				EmailAddress: "somecompany@somecompany.com",
+			},
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
 		Reference:         "My reference",

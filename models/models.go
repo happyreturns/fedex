@@ -1,5 +1,9 @@
 package models
 
+import (
+	"fmt"
+)
+
 type Address struct {
 	StreetLines         []string `xml:"q0:StreetLines"`
 	City                string   `xml:"q0:City"`
@@ -37,16 +41,51 @@ type Commodity struct {
 	NumberOfPieces int    `xml:"q0:NumberOfPieces"`
 	Description    string `xml:"q0:Description"`
 	// Purpose *string
-	CountryOfManufacture string `xml:"q0:CountryOfManufacture"`
-	// HarmonizedCode *string
-	Weight        Weight `xml:"q0:Weight"`
-	Quantity      int    `xml:"q0:Quantity"`
-	QuantityUnits string `xml:"q0:QuantityUnits"`
+	CountryOfManufacture string  `xml:"q0:CountryOfManufacture"`
+	HarmonizedCode       *string `xml:"q0:HarmonizedCode"`
+	Weight               Weight  `xml:"q0:Weight"`
+	Quantity             int     `xml:"q0:Quantity"`
+	QuantityUnits        string  `xml:"q0:QuantityUnits"`
 	// AdditionalMeasure *int
 	UnitPrice                   Money    `xml:"q0:UnitPrice"`
-	CustomsValue                Money    `xml:"q0:CustomsValue"`
+	CustomsValue                *Money   `xml:"q0:CustomsValue"`
 	ExportLicenseExpirationDate *string  `xml:"q0:ExportLicenseExpirationDate"`
 	CIMarksAndNumbers           []string `xml:"q0:CIMarksAndNumbers"`
+}
+
+type Commodities []Commodity
+
+func (c Commodities) Weight() Weight {
+	if len(c) == 0 {
+		return Weight{Units: "LB", Value: 0.0}
+	}
+
+	// Assume all the units are the same
+	weight := Weight{
+		Units: c[0].Weight.Units,
+		Value: 0.0,
+	}
+	for _, commodity := range c {
+		weight.Value += commodity.Weight.Value
+	}
+	return weight
+}
+
+func (c Commodities) CustomsValue() (Money, error) {
+	customsValue := Money{Currency: "USD"}
+
+	if len(c) == 0 {
+		return customsValue, nil
+	}
+
+	customsValue.Currency = c[0].CustomsValue.Currency
+	for _, commodity := range c {
+		if commodity.CustomsValue.Currency != customsValue.Currency {
+			return customsValue, fmt.Errorf("mismatching customs currencies: %s %s", commodity.CustomsValue.Currency, customsValue.Currency)
+		}
+		customsValue.Amount += commodity.CustomsValue.Amount
+	}
+	return customsValue, nil
 }
 
 type CompletedPackageDetails struct {
@@ -115,13 +154,13 @@ type CustomerReference struct {
 }
 
 type CustomsClearanceDetail struct {
-	Brokers       []Broker `xml:"q0:Brokers"`
-	DutiesPayment Payment  `xml:"q0:DutiesPayment"`
-	// DocumentContent string
-	CustomsValue                   Money             `xml:"q0:CustomsValue"`
-	PartiesToTransactionAreRelated bool              `xml:"q0:PartiesToTransactionAreRelated"`
-	CommercialInvoice              CommercialInvoice `xml:"q0:CommercialInvoice"`
-	Commodities                    []Commodity       `xml:"q0:Commodities"`
+	Brokers                        []Broker           `xml:"q0:Brokers"`
+	DutiesPayment                  Payment            `xml:"q0:DutiesPayment"`
+	DocumentContent                *string            `xml:"q0:DocumentContent"`
+	CustomsValue                   *Money             `xml:"q0:CustomsValue"`
+	PartiesToTransactionAreRelated bool               `xml:"q0:PartiesToTransactionAreRelated"`
+	CommercialInvoice              *CommercialInvoice `xml:"q0:CommercialInvoice"`
+	Commodities                    Commodities        `xml:"q0:Commodities"`
 }
 
 type DateOrTimestamp struct {
@@ -153,6 +192,20 @@ type EmailDetail struct {
 
 type EtdDetail struct {
 	RequestedDocumentCopies string `xml:"q0:RequestedDocumentCopies"`
+}
+
+type EdtCommodityTax struct {
+	HarmonizedCode string
+	Taxes          []EdtTaxDetail
+}
+
+type EdtTaxDetail struct {
+	TaxType      string
+	Name         string
+	TaxableValue Charge
+	Description  string
+	Formula      string
+	Amount       Charge
 }
 
 type Event struct {
@@ -325,6 +378,7 @@ type RateDetail struct {
 	TotalDutiesTaxesAndFees          Charge
 	TotalNetChargeWithDutiesAndTaxes Charge
 	Surcharges                       []Surcharge
+	DutiesAndTaxes                   []EdtCommodityTax
 }
 
 type RateReplyDetail struct {
@@ -397,14 +451,15 @@ type RequestedShipment struct {
 	Shipper   Shipper `xml:"q0:Shipper"`
 	Recipient Shipper `xml:"q0:Recipient"`
 
-	ShippingChargesPayment        Payment                        `xml:"q0:ShippingChargesPayment"`
+	ShippingChargesPayment        *Payment                       `xml:"q0:ShippingChargesPayment"`
 	SpecialServicesRequested      *SpecialServicesRequested      `xml:"q0:SpecialServicesRequested,omitempty"`
 	SmartPostDetail               *SmartPostDetail               `xml:"q0:SmartPostDetail,omitempty"`
 	CustomsClearanceDetail        *CustomsClearanceDetail        `xml:"q0:CustomsClearanceDetail,omitempty"`
-	LabelSpecification            LabelSpecification             `xml:"q0:LabelSpecification"`
+	LabelSpecification            *LabelSpecification            `xml:"q0:LabelSpecification"`
 	ShippingDocumentSpecification *ShippingDocumentSpecification `xml:"q0:ShippingDocumentSpecification"`
 	RateRequestTypes              *string                        `xml:"q0:RateRequestTypes"`
-	PackageCount                  int                            `xml:"q0:PackageCount"`
+	EdtRequestType                *string                        `xml:"q0:EdtRequestType"`
+	PackageCount                  *int                           `xml:"q0:PackageCount"`
 	RequestedPackageLineItems     []RequestedPackageLineItem     `xml:"q0:RequestedPackageLineItems"`
 }
 
@@ -596,4 +651,8 @@ type TransactionDetail struct {
 type Weight struct {
 	Units string  `xml:"q0:Units"`
 	Value float64 `xml:"q0:Value"`
+}
+
+func (w Weight) IsZero() bool {
+	return w.Value == 0.0
 }

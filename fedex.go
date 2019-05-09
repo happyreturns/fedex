@@ -5,6 +5,7 @@ package fedex
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -37,20 +38,6 @@ type Fedex struct {
 	FedexURL string
 }
 
-// Shipment wraps all the Fedex API fields needed for creating a shipment
-type Shipment struct {
-	FromAddress       models.Address
-	ToAddress         models.Address
-	FromContact       models.Contact
-	ToContact         models.Contact
-	NotificationEmail string
-	Reference         string
-	Service           string
-
-	// Only used for international ground shipments
-	Commodities []models.Commodity
-}
-
 // TrackByNumber returns tracking info for a specific Fedex tracking number
 func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.TrackReply, error) {
 
@@ -65,10 +52,9 @@ func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.Tra
 }
 
 // Rate : Gets the estimated rates for a shipment
-func (f Fedex) Rate(fromAddress models.Address, toAddress models.Address,
-	fromContact models.Contact, toContact models.Contact) (*models.RateReply, error) {
+func (f Fedex) Rate(rate *RateRequest) (*models.RateReply, error) {
 
-	request := f.rateRequest(fromAddress, toAddress, fromContact, toContact)
+	request := f.rateRequest(rate)
 	response := &models.RateResponseEnvelope{}
 
 	err := f.makeRequestAndUnmarshalResponse("/rate/v24", request, response)
@@ -107,9 +93,15 @@ func (f Fedex) SendNotifications(trackingNo, email string) (*models.SendNotifica
 }
 
 func (f Fedex) Ship(shipment *Shipment) (*models.ProcessShipmentReply, error) {
+	commodities, err := f.commoditiesWithCustoms(shipment)
+	if err != nil {
+		return nil, fmt.Errorf("commodities with customs: %s", err)
+	}
+	shipment.Commodities = commodities
+
 	request, err := f.createProcessShipmentRequest(shipment)
 	if err != nil {
-		return nil, fmt.Errorf("create process shipment request: %s", err) // TODO test me
+		return nil, fmt.Errorf("create process shipment request: %s", err)
 	}
 
 	response := &models.ShipResponseEnvelope{}
@@ -120,12 +112,55 @@ func (f Fedex) Ship(shipment *Shipment) (*models.ProcessShipmentReply, error) {
 	return &response.Reply, nil
 }
 
+func (f Fedex) commoditiesWithCustoms(shipment *Shipment) (models.Commodities, error) {
+	// TODO new struct
+	if !shipment.IsInternational() {
+		return shipment.Commodities, nil // TODO is this weird
+	}
+
+	customsValue, err := shipment.Commodities.CustomsValue()
+	if err != nil {
+		return nil, fmt.Errorf("customs value: %s", err)
+	}
+	if customsValue.Amount < 800 {
+		return shipment.Commodities, nil
+	}
+
+	rateReply, err := f.Rate(&RateRequest{
+		FromAndTo:   shipment.FromAndTo,
+		Commodities: shipment.Commodities,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get rate: %s", err)
+	}
+
+	charges, err := rateReply.DutiesAndTaxesByItem()
+	if err != nil {
+		return nil, fmt.Errorf("duties and taxes by item: %s", err)
+	}
+	if len(charges) != len(shipment.Commodities) {
+		return nil, errors.New("charges should match commodities length")
+	}
+
+	// TODO not 100% sure what to do with this, or if this is right
+	newCommodities := make([]models.Commodity, len(shipment.Commodities))
+	for idx, commodity := range shipment.Commodities {
+		newCommodities[idx] = commodity
+		newCommodities[idx].CustomsValue = &models.Money{
+			Currency: charges[idx].Currency,
+			Amount:   charges[idx].Amount,
+		}
+	}
+
+	return newCommodities, nil
+}
+
 // TODO get me to work
 func (f Fedex) UploadImages(images []models.Image) error {
 	request := f.uploadImagesRequest(images)
 
 	response := &models.UploadImagesResponseEnvelope{}
-	if err := f.makeRequestAndUnmarshalResponse("/cdus/12", request, response); err != nil {
+	if err := f.makeRequestAndUnmarshalResponse("/uploaddocument/v11", request, response); err != nil {
 		return fmt.Errorf("make upload images request and unmarshal: %s", err)
 	}
 
@@ -163,11 +198,16 @@ func (f Fedex) makeRequestAndUnmarshalResponse(url string, request models.Envelo
 }
 
 // postXML to Fedex API and return response
-func (f Fedex) postXML(url string, xml string) (content []byte, err error) {
+func (f Fedex) postXML(url string, xml string) ([]byte, error) {
 	resp, err := http.Post(url, "text/xml", strings.NewReader(xml))
 	if err != nil {
-		return content, err
+		return nil, err
 	}
 	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read all bytes: %s", err)
+	}
+	return content, nil
 }

@@ -8,7 +8,7 @@ func (f Fedex) uploadImagesRequest(images []models.Image) models.Envelope {
 	// body
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/cdus/v12",
+		Namespace: "http://fedex.com/ws/uploaddocument/v11",
 		Body: struct {
 			UploadImagesRequest models.UploadImagesRequest `xml:"q0:UploadImagesRequest"`
 		}{

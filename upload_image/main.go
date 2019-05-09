@@ -41,9 +41,9 @@ func main() {
 	}
 	///////////////////////////////////////////////////
 
-	prodFedex := creds["prod"]
+	prodFedex := creds["test"]
 
-	prodFedex.UploadImages([]models.Image{
+	err = prodFedex.UploadImages([]models.Image{
 		{
 			ID:    "IMAGE_1",
 			Image: letterhead,
@@ -53,7 +53,11 @@ func main() {
 			Image: signature,
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
 
+	fmt.Println("DONE")
 }
 
 //  ...

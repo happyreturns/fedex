@@ -8,9 +8,11 @@ import (
 )
 
 func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope, error) {
+
+	packageCount := 1
 	customsClearanceDetail, err := f.customsClearanceDetail(shipment)
 	if err != nil {
-		return models.Envelope{}, fmt.Errorf("get customs clearance detail: %s", err) // TODO test this error
+		return models.Envelope{}, fmt.Errorf("customs clearance detail: %s", err)
 	}
 
 	req := models.ProcessShipmentRequest{
@@ -32,8 +34,8 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 		},
 		RequestedShipment: models.RequestedShipment{
 			ShipTimestamp: models.Timestamp(time.Now()),
-			DropoffType:   dropoffType(shipment),
-			ServiceType:   serviceType(shipment),
+			DropoffType:   shipment.dropoffType(),
+			ServiceType:   shipment.serviceType(),
 			PackagingType: "YOUR_PACKAGING",
 			Shipper: models.Shipper{
 				AccountNumber: f.Account,
@@ -45,7 +47,7 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 				Address:       shipment.ToAddress,
 				Contact:       shipment.ToContact,
 			},
-			ShippingChargesPayment: models.Payment{
+			ShippingChargesPayment: &models.Payment{
 				PaymentType: "SENDER",
 				Payor: models.Payor{
 					ResponsibleParty: models.ResponsibleParty{
@@ -54,12 +56,12 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 				},
 			},
 			SmartPostDetail:               f.smartPostDetail(shipment),
-			SpecialServicesRequested:      specialServicesRequested(shipment),
+			SpecialServicesRequested:      shipment.specialServicesRequested(),
 			CustomsClearanceDetail:        customsClearanceDetail,
-			LabelSpecification:            labelSpecification(shipment),
-			ShippingDocumentSpecification: shippingDocumentSpecification(shipment),
-			PackageCount:                  1,
-			RequestedPackageLineItems:     requestedPackageLineItems(shipment),
+			LabelSpecification:            shipment.labelSpecification(),
+			ShippingDocumentSpecification: shipment.shippingDocumentSpecification(),
+			PackageCount:                  &packageCount,
+			RequestedPackageLineItems:     shipment.requestedPackageLineItems(),
 		},
 	}
 
@@ -73,7 +75,7 @@ func (f Fedex) createProcessShipmentRequest(shipment *Shipment) (models.Envelope
 }
 
 func (f Fedex) smartPostDetail(shipment *Shipment) *models.SmartPostDetail {
-	if serviceType(shipment) == "SMART_POST" {
+	if shipment.serviceType() == "SMART_POST" {
 		return &models.SmartPostDetail{
 			Indicia:              "PARCEL_RETURN",
 			AncillaryEndorsement: "ADDRESS_CORRECTION",
@@ -83,18 +85,19 @@ func (f Fedex) smartPostDetail(shipment *Shipment) *models.SmartPostDetail {
 	return nil
 }
 
-func serviceType(shipment *Shipment) string {
+func (s *Shipment) serviceType() string {
 	switch {
-	case shipment.Service == "fedex_smart_post",
-		shipment.Service == "return" && !isInternational(shipment):
+	case s.Service == "fedex_smart_post",
+		s.Service == "return" && !s.IsInternational():
+		// TODO throw error if smart_post account, international?
 		return "SMART_POST"
 	default:
 		return "FEDEX_GROUND"
 	}
 }
 
-func shippingDocumentSpecification(shipment *Shipment) *models.ShippingDocumentSpecification {
-	if serviceType(shipment) != "SMART_POST" && isInternational(shipment) {
+func (s *Shipment) shippingDocumentSpecification() *models.ShippingDocumentSpecification {
+	if s.serviceType() != "SMART_POST" && s.IsInternational() {
 		return &models.ShippingDocumentSpecification{
 			ShippingDocumentTypes: []string{"COMMERCIAL_INVOICE"},
 			CommercialInvoiceDetail: []models.CommercialInvoiceDetail{
@@ -120,56 +123,36 @@ func shippingDocumentSpecification(shipment *Shipment) *models.ShippingDocumentS
 	return nil
 }
 
-func labelSpecification(shipment *Shipment) models.LabelSpecification {
-	if serviceType(shipment) == "FEDEX_GROUND" && isInternational(shipment) {
+func (s *Shipment) labelSpecification() *models.LabelSpecification {
+	if s.serviceType() == "FEDEX_GROUND" && s.IsInternational() {
 		stockType := "PAPER_4X6"
-		return models.LabelSpecification{
+		return &models.LabelSpecification{
 			LabelFormatType: "COMMON2D",
 			ImageType:       "PDF",
 			LabelStockType:  &stockType,
 		}
 
 	}
-	return models.LabelSpecification{
+	return &models.LabelSpecification{
 		LabelFormatType: "COMMON2D",
 		ImageType:       "PNG",
 	}
 }
 
-func dropoffType(shipment *Shipment) string {
-	if isInternational(shipment) {
+func (s *Shipment) dropoffType() string {
+	if s.IsInternational() {
 		return "BUSINESS_SERVICE_CENTER"
 	}
 	return "REGULAR_PICKUP"
 }
 
-func isInternational(shipment *Shipment) bool {
-	fromCountryCode := shipment.FromAddress.CountryCode
-	if fromCountryCode == "" {
-		fromCountryCode = "US"
+func (s *Shipment) weight() models.Weight {
+	commoditiesWeight := s.Commodities.Weight()
+	if !commoditiesWeight.IsZero() {
+		return commoditiesWeight
 	}
 
-	toCountryCode := shipment.ToAddress.CountryCode
-	if toCountryCode == "" {
-		toCountryCode = "US"
-	}
-
-	return fromCountryCode != toCountryCode
-}
-
-func weight(shipment *Shipment) models.Weight {
-	if isInternational(shipment) && len(shipment.Commodities) > 0 {
-		weight := models.Weight{
-			Units: shipment.Commodities[0].Weight.Units,
-			Value: 0.0,
-		}
-		for _, commodity := range shipment.Commodities {
-			weight.Value += commodity.Weight.Value
-		}
-		return weight
-	}
-
-	switch serviceType(shipment) {
+	switch s.serviceType() {
 	case "SMART_POST":
 		return models.Weight{Units: "LB", Value: 0.99}
 	default:
@@ -177,8 +160,8 @@ func weight(shipment *Shipment) models.Weight {
 	}
 }
 
-func dimensions(shipment *Shipment) models.Dimensions {
-	switch serviceType(shipment) {
+func (s *Shipment) dimensions() models.Dimensions {
+	switch s.serviceType() {
 	case "SMART_POST":
 		return models.Dimensions{Length: 6, Width: 5, Height: 5, Units: "IN"}
 	default:
@@ -215,9 +198,9 @@ func defaultEventNotificationDetail(notificationEmail string) *models.EventNotif
 	}
 }
 
-func specialServicesRequested(shipment *Shipment) *models.SpecialServicesRequested {
+func (s *Shipment) specialServicesRequested() *models.SpecialServicesRequested {
 	var specialServicesRequested *models.SpecialServicesRequested
-	switch serviceType(shipment) {
+	switch s.serviceType() {
 	case "SMART_POST":
 		specialServicesRequested = &models.SpecialServicesRequested{
 			SpecialServiceTypes: []string{"RETURN_SHIPMENT"},
@@ -226,11 +209,11 @@ func specialServicesRequested(shipment *Shipment) *models.SpecialServicesRequest
 			},
 		}
 
-		if shipment.NotificationEmail != "" {
-			specialServicesRequested.EventNotificationDetail = defaultEventNotificationDetail(shipment.NotificationEmail)
+		if s.NotificationEmail != "" {
+			specialServicesRequested.EventNotificationDetail = defaultEventNotificationDetail(s.NotificationEmail)
 		}
 	default:
-		if isInternational(shipment) {
+		if s.IsInternational() {
 			// TODO notifications for international shipments?
 			specialServicesRequested = &models.SpecialServicesRequested{
 				SpecialServiceTypes: []string{"ELECTRONIC_TRADE_DOCUMENTS"},
@@ -238,39 +221,39 @@ func specialServicesRequested(shipment *Shipment) *models.SpecialServicesRequest
 					RequestedDocumentCopies: "COMMERCIAL_INVOICE",
 				},
 			}
-		} else if shipment.NotificationEmail != "" {
+		} else if s.NotificationEmail != "" {
 			specialServicesRequested = &models.SpecialServicesRequested{
 				SpecialServiceTypes:     []string{"EVENT_NOTIFICATION"},
-				EventNotificationDetail: defaultEventNotificationDetail(shipment.NotificationEmail),
+				EventNotificationDetail: defaultEventNotificationDetail(s.NotificationEmail),
 			}
 		}
 	}
 	return specialServicesRequested
 }
 
-func customerReference(shipment *Shipment) models.CustomerReference {
-	switch serviceType(shipment) {
+func (s *Shipment) customerReference() models.CustomerReference {
+	switch s.serviceType() {
 	case "SMART_POST":
 		return models.CustomerReference{
 			CustomerReferenceType: "RMA_ASSOCIATION",
-			Value: shipment.Reference,
+			Value: s.Reference,
 		}
 	default:
 		return models.CustomerReference{
 			CustomerReferenceType: "CUSTOMER_REFERENCE",
-			Value: shipment.Reference,
+			Value: s.Reference,
 		}
 	}
 }
 
 func (f Fedex) customsClearanceDetail(shipment *Shipment) (*models.CustomsClearanceDetail, error) {
-	if !isInternational(shipment) {
-		return nil, nil
+	if !shipment.IsInternational() {
+		return nil, nil // TODO is this weird
 	}
 
-	customsValue, err := customsValue(shipment.Commodities)
+	customsValue, err := shipment.Commodities.CustomsValue()
 	if err != nil {
-		return nil, fmt.Errorf("customs value: %s", err)
+		return nil, fmt.Errorf("got error: %s", err)
 	}
 
 	return &models.CustomsClearanceDetail{
@@ -285,43 +268,22 @@ func (f Fedex) customsClearanceDetail(shipment *Shipment) (*models.CustomsCleara
 				},
 			},
 		},
-		CustomsValue:                   customsValue,
+		CustomsValue:                   &customsValue,
 		Commodities:                    shipment.Commodities,
 		PartiesToTransactionAreRelated: false,
-		CommercialInvoice: models.CommercialInvoice{
+		CommercialInvoice: &models.CommercialInvoice{
 			Purpose: "REPAIR_AND_RETURN",
 		},
 	}, nil
 }
 
-func customsValue(commodities []models.Commodity) (models.Money, error) {
-	// TODO eventually we will call an endpoint to calculate the
-	// customsValueAmount when the sum value of all items becomes greater than
-	// $800
-	customsValue := models.Money{Currency: "USD"}
-
-	if len(commodities) == 0 {
-		return customsValue, nil
-	}
-
-	customsValue.Currency = commodities[0].CustomsValue.Currency
-	for _, commodity := range commodities {
-		if commodity.CustomsValue.Currency != customsValue.Currency {
-			return customsValue, fmt.Errorf("mismatching customs currencies: %s %s", commodity.CustomsValue.Currency, customsValue.Currency)
-		}
-		customsValue.Amount += commodity.CustomsValue.Amount
-	}
-	return customsValue, nil
-
-}
-
-func requestedPackageLineItems(shipment *Shipment) []models.RequestedPackageLineItem {
+func (s *Shipment) requestedPackageLineItems() []models.RequestedPackageLineItem {
 	return []models.RequestedPackageLineItem{{
 		SequenceNumber:     1,
 		PhysicalPackaging:  "BAG",
 		ItemDescription:    "ItemDescription",
-		CustomerReferences: []models.CustomerReference{customerReference(shipment)},
-		Weight:             weight(shipment),
-		Dimensions:         dimensions(shipment),
+		CustomerReferences: []models.CustomerReference{s.customerReference()},
+		Weight:             s.weight(),
+		Dimensions:         s.dimensions(),
 	}}
 }
