@@ -100,15 +100,16 @@ func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
 		location = laTimeZone
 	}
 
-	now := time.Now().In(location)
-	year, month, day := now.Date()
+	pickupTime := time.Now().In(location)
 
-	// If it's past 12pm, ship the next day, not today
-	if now.Hour() > 12 {
-		day++
+	if pickupTime.Hour() >= 12 {
+		// If it's past 12pm, ship the next day, not today
+		pickupTime.Add(24 * time.Hour)
 	}
-	day += numDaysToDelay
 
+	pickupTime.Add(time.Duration(numDaysToDelay*24) * time.Hour)
+
+	year, month, day := pickupTime.Date()
 	return time.Date(year, month, day, 12, 0, 0, 0, location)
 }
 
