@@ -487,27 +487,30 @@ func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {
 }
 
 func TestCreatePickup(t *testing.T) {
-	t.SkipNow()
 
-	reply, err := prodFedex.CreatePickup(models.PickupLocation{
-		Address: models.Address{
-			StreetLines:         []string{"1517 Lincoln Blvd"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
-		},
-		Contact: models.Contact{
-			PersonName:   "Jenny",
-			PhoneNumber:  "213 867 5309",
-			EmailAddress: "jenny@jenny.com",
-		}},
-		models.Address{
-			StreetLines:         []string{"1106 Broadway"},
-			City:                "Santa Monica",
-			StateOrProvinceCode: "CA",
-			PostalCode:          "90401",
-			CountryCode:         "US",
+	t.SkipNow()
+	reply, err := prodFedex.CreatePickup(
+		&models.Pickup{
+			PickupLocation: models.PickupLocation{
+				Address: models.Address{
+					StreetLines:         []string{"1517 Lincoln Blvd"},
+					City:                "Santa Monica",
+					StateOrProvinceCode: "CA",
+					PostalCode:          "90401",
+					CountryCode:         "US",
+				},
+				Contact: models.Contact{
+					PersonName:   "Jenny",
+					PhoneNumber:  "213 867 5309",
+					EmailAddress: "jenny@jenny.com",
+				}},
+			ToAddress: models.Address{
+				StreetLines:         []string{"1106 Broadway"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
 		},
 	)
 	if err != nil {
