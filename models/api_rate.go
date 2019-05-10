@@ -45,6 +45,8 @@ func (rr *RateReply) TotalDutiesAndTaxes() (Charge, error) {
 	return rateDetail.TotalDutiesAndTaxes, nil
 }
 
+// TODO not 100% sure what we want: the Amount of dutyAndTax, or the
+// TaxableValue of dutyAndTax. I think we want TaxableValue
 func (rr *RateReply) DutiesAndTaxesByItem() ([]Charge, error) {
 	rateDetail, err := rr.firstRatedShipmentDetails()
 	if err != nil {
@@ -62,6 +64,25 @@ func (rr *RateReply) DutiesAndTaxesByItem() ([]Charge, error) {
 		for _, tax := range dutyAndTax.Taxes {
 			charges[idx].Amount += tax.Amount.Amount
 		}
+	}
+
+	return charges, nil
+}
+
+func (rr *RateReply) TaxableValues() ([]Charge, error) {
+	rateDetail, err := rr.firstRatedShipmentDetails()
+	if err != nil {
+		return nil, fmt.Errorf("first rated shipment details: %s", err)
+	}
+
+	charges := make([]Charge, len(rateDetail.DutiesAndTaxes))
+	for idx, dutyAndTax := range rateDetail.DutiesAndTaxes {
+		if len(dutyAndTax.Taxes) == 0 {
+			return nil, errors.New("dutyAndTax has length 0")
+		}
+		// Assume the customs value is the first taxable value of the first tax,
+		// even though there may be many taxes with different taxable values
+		charges[idx] = Charge{Currency: dutyAndTax.Taxes[0].TaxableValue.Currency}
 	}
 
 	return charges, nil

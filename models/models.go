@@ -47,7 +47,7 @@ type Commodity struct {
 	Quantity             int     `xml:"q0:Quantity"`
 	QuantityUnits        string  `xml:"q0:QuantityUnits"`
 	// AdditionalMeasure *int
-	UnitPrice                   Money    `xml:"q0:UnitPrice"`
+	UnitPrice                   *Money   `xml:"q0:UnitPrice"`
 	CustomsValue                *Money   `xml:"q0:CustomsValue"`
 	ExportLicenseExpirationDate *string  `xml:"q0:ExportLicenseExpirationDate"`
 	CIMarksAndNumbers           []string `xml:"q0:CIMarksAndNumbers"`
@@ -72,20 +72,20 @@ func (c Commodities) Weight() Weight {
 }
 
 func (c Commodities) CustomsValue() (Money, error) {
-	customsValue := Money{Currency: "USD"}
+	total := Money{Currency: "USD"}
 
 	if len(c) == 0 {
-		return customsValue, nil
+		return total, nil
 	}
 
-	customsValue.Currency = c[0].CustomsValue.Currency
+	total.Currency = c[0].CustomsValue.Currency
 	for _, commodity := range c {
-		if commodity.CustomsValue.Currency != customsValue.Currency {
-			return customsValue, fmt.Errorf("mismatching customs currencies: %s %s", commodity.CustomsValue.Currency, customsValue.Currency)
+		if commodity.CustomsValue.Currency != total.Currency {
+			return total, fmt.Errorf("mismatching customs currencies: %s %s", commodity.CustomsValue.Currency, total.Currency)
 		}
-		customsValue.Amount += commodity.CustomsValue.Amount
+		total.Amount += commodity.CustomsValue.Amount
 	}
-	return customsValue, nil
+	return total, nil
 }
 
 type CompletedPackageDetails struct {

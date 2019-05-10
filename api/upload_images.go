@@ -1,10 +1,23 @@
-package fedex
+package api
 
 import (
+	"fmt"
+
 	"github.com/happyreturns/fedex/models"
 )
 
-func (f Fedex) uploadImagesRequest(images []models.Image) models.Envelope {
+func (a API) UploadImages(images []models.Image) error {
+	request := a.uploadImagesRequest(images)
+
+	response := &models.UploadImagesResponseEnvelope{}
+	if err := a.makeRequestAndUnmarshalResponse("/uploaddocument/v11", request, response); err != nil {
+		return fmt.Errorf("make upload images request and unmarshal: %s", err)
+	}
+
+	return nil
+}
+
+func (a API) uploadImagesRequest(images []models.Image) models.Envelope {
 	// body
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
@@ -16,13 +29,13 @@ func (f Fedex) uploadImagesRequest(images []models.Image) models.Envelope {
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{
 						UserCredential: models.UserCredential{
-							Key:      f.Key,
-							Password: f.Password,
+							Key:      a.Key,
+							Password: a.Password,
 						},
 					},
 					ClientDetail: models.ClientDetail{
-						AccountNumber: f.Account,
-						MeterNumber:   f.Meter,
+						AccountNumber: a.Account,
+						MeterNumber:   a.Meter,
 					},
 					Version: models.Version{
 						ServiceID: "cdus",

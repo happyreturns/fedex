@@ -1,4 +1,4 @@
-package fedex
+package api
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ var (
 			Major:     23,
 		},
 	}
-	shipmentTestFedex = Fedex{
+	testAPI = API{
 		Key:      "Key",
 		Password: "Password",
 		Account:  "Account",
@@ -32,8 +32,8 @@ var (
 )
 
 func TestGroundShipmentNotInternational(t *testing.T) {
-	shipment := &Shipment{
-		FromAndTo: FromAndTo{
+	shipment := &models.Shipment{
+		FromAndTo: models.FromAndTo{
 			FromAddress: models.Address{
 				StreetLines:         []string{"1511 15th Street"},
 				City:                "Santa Monica",
@@ -62,7 +62,7 @@ func TestGroundShipmentNotInternational(t *testing.T) {
 		Reference:         "REF",
 		Service:           "FEDEX_GROUND",
 	}
-	envelope, err := shipmentTestFedex.createProcessShipmentRequest(shipment)
+	envelope, err := testAPI.processShipmentRequest(shipment)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,8 +162,8 @@ func TestGroundShipmentInternational(t *testing.T) {
 			CustomsValue:         &models.Money{Currency: "USD", Amount: 381.12},
 		},
 	}
-	shipment := &Shipment{
-		FromAndTo: FromAndTo{
+	shipment := &models.Shipment{
+		FromAndTo: models.FromAndTo{
 			FromAddress: models.Address{
 				StreetLines:         []string{"1234 Main Street", "Suite 200"},
 				City:                "Winnipeg",
@@ -193,7 +193,7 @@ func TestGroundShipmentInternational(t *testing.T) {
 		Service:           "FEDEX_GROUND",
 		Commodities:       commodities,
 	}
-	envelope, err := shipmentTestFedex.createProcessShipmentRequest(shipment)
+	envelope, err := testAPI.processShipmentRequest(shipment)
 	if err != nil {
 		t.Fatal(err)
 	}
