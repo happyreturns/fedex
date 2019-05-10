@@ -54,7 +54,7 @@ func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.CreatePickupReply, e
 		err   error
 	)
 
-	for delay := 0; delay < 5; delay++ {
+	for delay := 0; delay <= 5; delay++ {
 		reply, err = f.API.CreatePickup(pickup, delay)
 		if err == nil {
 			break
