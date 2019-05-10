@@ -23,13 +23,12 @@ func (a API) ProcessShipment(shipment *models.Shipment) (*models.ProcessShipment
 }
 
 func (a API) processShipmentRequest(shipment *models.Shipment) (models.Envelope, error) {
-
-	packageCount := 1
 	customsClearanceDetail, err := a.customsClearanceDetail(shipment)
 	if err != nil {
 		return models.Envelope{}, fmt.Errorf("customs clearance detail: %s", err)
 	}
 
+	packageCount := 1
 	req := models.ProcessShipmentRequest{
 		Request: models.Request{
 			WebAuthenticationDetail: models.WebAuthenticationDetail{
@@ -111,9 +110,6 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 	}
 
 	return &models.CustomsClearanceDetail{
-		Brokers: []models.Broker{{
-			Type: "IMPORT",
-		}},
 		DutiesPayment: models.Payment{
 			PaymentType: "SENDER",
 			Payor: models.Payor{
@@ -126,7 +122,8 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 		Commodities:                    shipment.Commodities,
 		PartiesToTransactionAreRelated: false,
 		CommercialInvoice: &models.CommercialInvoice{
-			Purpose: "REPAIR_AND_RETURN",
+			Purpose:        "REPAIR_AND_RETURN",
+			OriginatorName: "Happy Returns", // TODO
 		},
 	}, nil
 }

@@ -116,7 +116,8 @@ type CompletedTrackDetail struct {
 }
 
 type CommercialInvoice struct {
-	Purpose string `xml:"q0:Purpose"`
+	Purpose        string `xml:"q0:Purpose"`
+	OriginatorName string `xml:"q0:OriginatorName"`
 }
 
 type CommercialInvoiceDetail struct {

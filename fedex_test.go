@@ -395,26 +395,31 @@ func TestShipInternational(t *testing.T) {
 		},
 	}
 
-	// fmt.Println(fedex)
-	// exampleShipment.ToContact.CompanyName = "dev"
-	// testShipInternational(t, testFedex, exampleShipment)
-	//
-	// exampleShipment.ToContact.CompanyName = "normal"
-	// testShipInternational(t, fedex, exampleShipment)
-	//
-	// // it also works with smartpost la account
-	// fmt.Println("smartpost la")
-	// testShipInternational(t, laSmartPostFedex, exampleShipment)
-	//
-	// // it also works with smartpost pa account
-	// fmt.Println("smartpost blandon")
-	// testShipInternational(t, blandonSmartPostFedex, exampleShipment)
-	//
-	// // it also works with no email
-	// fmt.Println("No email")
-	// exampleShipment.NotificationEmail = ""
-	// exampleShipment.ToContact.CompanyName = "no-email"
-	// testShipInternational(t, fedex, exampleShipment)
+	fmt.Println(fedex)
+	exampleShipment.ToContact.CompanyName = "dev"
+	testShipInternational(t, testFedex, exampleShipment)
+	t.SkipNow()
+
+	// test no commodities
+	// test commodities with no customsvalue
+	// test commodities with no unitprice
+
+	exampleShipment.ToContact.CompanyName = "normal"
+	testShipInternational(t, fedex, exampleShipment)
+
+	// it also works with smartpost la account
+	fmt.Println("smartpost la")
+	testShipInternational(t, laSmartPostFedex, exampleShipment)
+
+	// it also works with smartpost pa account
+	fmt.Println("smartpost blandon")
+	testShipInternational(t, blandonSmartPostFedex, exampleShipment)
+
+	// it also works with no email
+	fmt.Println("No email")
+	exampleShipment.NotificationEmail = ""
+	exampleShipment.ToContact.CompanyName = "no-email"
+	testShipInternational(t, fedex, exampleShipment)
 
 	// it also works when commodities > 800
 	exampleShipment.Commodities = append(exampleShipment.Commodities,
@@ -474,13 +479,16 @@ func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("output-international-invoice-%s-%s.pdf", shipment.ToContact.CompanyName, f.Key), data, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("output-international-invoice-%s-%s.pdf", shipment.ToContact.CompanyName, f.API.Key), data, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 }
 
 func TestCreatePickup(t *testing.T) {
+	t.SkipNow()
+
 	reply, err := prodFedex.CreatePickup(models.PickupLocation{
 		Address: models.Address{
 			StreetLines:         []string{"1517 Lincoln Blvd"},

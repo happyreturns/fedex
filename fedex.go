@@ -89,6 +89,7 @@ func (f Fedex) UploadImages(images []models.Image) error {
 	return nil
 }
 
+// TODO unit price or customs value on shipment.Commodities
 func (f Fedex) commoditiesWithCustoms(shipment *models.Shipment) (models.Commodities, error) {
 	needsInvoice, err := needsCustomCommercialInvoice(shipment)
 	if err != nil {
