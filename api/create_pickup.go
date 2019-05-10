@@ -18,8 +18,8 @@ func init() {
 	}
 }
 
-func (a API) CreatePickup(pickupLocation models.PickupLocation, toAddress models.Address) (*models.CreatePickupReply, error) {
-	request := a.createPickupRequest(pickupLocation, toAddress)
+func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.CreatePickupReply, error) {
+	request := a.createPickupRequest(pickup, numDaysToDelay)
 	response := &models.CreatePickupResponseEnvelope{}
 
 	err := a.makeRequestAndUnmarshalResponse("/pickup/v17", request, response)
@@ -30,7 +30,7 @@ func (a API) CreatePickup(pickupLocation models.PickupLocation, toAddress models
 	return &response.Reply, nil
 }
 
-func (a API) createPickupRequest(pickupLocation models.PickupLocation, toAddress models.Address) models.Envelope {
+func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/pickup/v17",
@@ -56,15 +56,15 @@ func (a API) createPickupRequest(pickupLocation models.PickupLocation, toAddress
 				},
 				OriginDetail: models.OriginDetail{
 					UseAccountAddress:       false,
-					PickupLocation:          pickupLocation,
+					PickupLocation:          pickup.PickupLocation,
 					PackageLocation:         "NONE",  // TODO not necessarily true
 					BuildingPart:            "SUITE", // TODO not necessarily true
 					BuildingPartDescription: "",
-					ReadyTimestamp:          models.Timestamp(pickupTime(pickupLocation.Address)),
+					ReadyTimestamp:          models.Timestamp(pickupTime(pickup.PickupLocation.Address, numDaysToDelay)),
 					CompanyCloseTime:        "16:00:00", // TODO not necessarily true
 				},
 				FreightPickupDetail: models.FreightPickupDetail{
-					ApprovedBy:  pickupLocation.Contact,
+					ApprovedBy:  pickup.PickupLocation.Contact,
 					Payment:     "SENDER",
 					Role:        "SHIPPER",
 					SubmittedBy: models.Contact{},
@@ -72,7 +72,7 @@ func (a API) createPickupRequest(pickupLocation models.PickupLocation, toAddress
 						{
 							Service:        "INTERNATIONAL_ECONOMY_FREIGHT",
 							SequenceNumber: 1,
-							Destination:    toAddress,
+							Destination:    pickup.ToAddress,
 							Packaging:      "BAG",
 							Pieces:         1,
 							Weight: models.Weight{
@@ -94,7 +94,7 @@ func (a API) createPickupRequest(pickupLocation models.PickupLocation, toAddress
 	}
 }
 
-func pickupTime(pickupAddress models.Address) time.Time {
+func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
 	location, err := toLocation(pickupAddress)
 	if err != nil {
 		location = laTimeZone
@@ -107,6 +107,7 @@ func pickupTime(pickupAddress models.Address) time.Time {
 	if now.Hour() > 12 {
 		day++
 	}
+	day += numDaysToDelay
 
 	return time.Date(year, month, day, 12, 0, 0, 0, location)
 }

@@ -48,8 +48,19 @@ func (f Fedex) Rate(rate *models.Rate) (*models.RateReply, error) {
 }
 
 // CreatePickup creates a pickup
-func (f Fedex) CreatePickup(pickupLocation models.PickupLocation, toAddress models.Address) (*models.CreatePickupReply, error) {
-	reply, err := f.API.CreatePickup(pickupLocation, toAddress)
+func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.CreatePickupReply, error) {
+	var (
+		reply *models.CreatePickupReply
+		err   error
+	)
+
+	for delay := 0; delay < 5; delay++ {
+		reply, err = f.API.CreatePickup(pickup, delay)
+		if err == nil {
+			break
+		}
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("api create pickup: %s", err)
 	}
