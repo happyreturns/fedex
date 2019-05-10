@@ -268,6 +268,28 @@ type FreightPickupLineItem struct {
 	Description        string  `xml:"q0:Description"`
 }
 
+// TODO is this needed as its own struct? i don't think so if the Rate itself doesn't decide to do stuff differently for international (rather f Fedex does on the Shipment)
+type FromAndTo struct {
+	FromAddress Address
+	ToAddress   Address
+	FromContact Contact
+	ToContact   Contact
+}
+
+func (ft FromAndTo) IsInternational() bool {
+	fromCountryCode := ft.FromAddress.CountryCode
+	if fromCountryCode == "" {
+		fromCountryCode = "US"
+	}
+
+	toCountryCode := ft.ToAddress.CountryCode
+	if toCountryCode == "" {
+		toCountryCode = "US"
+	}
+
+	return fromCountryCode != toCountryCode
+}
+
 type Identifier struct {
 	Type  string
 	Value string

@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+// Rate wraps all the Fedex API fields needed for getting a rate
+type Rate struct {
+	FromAndTo
+
+	// Only used for international ground shipments
+	Commodities Commodities
+}
+
 type RateRequest struct {
 	Request
 	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`
