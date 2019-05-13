@@ -109,6 +109,13 @@ func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
 
 	pickupTime.Add(time.Duration(numDaysToDelay*24) * time.Hour)
 
+	// Don't schedule pickups for Saturday or Sunday
+	if pickupTime.Weekday() == time.Saturday {
+		pickupTime.Add(48 * time.Hour)
+	} else if pickupTime.Weekday() == time.Sunday {
+		pickupTime.Add(24 * time.Hour)
+	}
+
 	year, month, day := pickupTime.Date()
 	return time.Date(year, month, day, 12, 0, 0, 0, location)
 }

@@ -487,7 +487,6 @@ func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {
 }
 
 func TestCreatePickup(t *testing.T) {
-
 	t.SkipNow()
 	reply, err := prodFedex.CreatePickup(
 		&models.Pickup{
