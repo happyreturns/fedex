@@ -148,7 +148,7 @@ func TestGroundShipmentInternational(t *testing.T) {
 			Weight:               models.Weight{Units: "LB", Value: 10.0},
 			Quantity:             1,
 			QuantityUnits:        "pcs",
-			UnitPrice:            models.Money{Currency: "USD", Amount: 25.00},
+			UnitPrice:            &models.Money{Currency: "USD", Amount: 25.00},
 			CustomsValue:         &models.Money{Currency: "USD", Amount: 30.00},
 		},
 		{
@@ -158,7 +158,7 @@ func TestGroundShipmentInternational(t *testing.T) {
 			Weight:               models.Weight{Units: "LB", Value: 5.0},
 			Quantity:             1,
 			QuantityUnits:        "pcs",
-			UnitPrice:            models.Money{Currency: "USD", Amount: 214.42},
+			UnitPrice:            &models.Money{Currency: "USD", Amount: 214.42},
 			CustomsValue:         &models.Money{Currency: "USD", Amount: 381.12},
 		},
 	}
@@ -252,8 +252,9 @@ func TestGroundShipmentInternational(t *testing.T) {
 		t.Fatal("PaymentType doesn't match")
 	}
 
-	if specialServicesRequested := processShipment.RequestedShipment.SpecialServicesRequested; len(specialServicesRequested.SpecialServiceTypes) != 1 ||
+	if specialServicesRequested := processShipment.RequestedShipment.SpecialServicesRequested; len(specialServicesRequested.SpecialServiceTypes) != 2 ||
 		specialServicesRequested.SpecialServiceTypes[0] != "ELECTRONIC_TRADE_DOCUMENTS" ||
+		specialServicesRequested.SpecialServiceTypes[1] != "EVENT_NOTIFICATION" ||
 		specialServicesRequested.EtdDetail.RequestedDocumentCopies != "COMMERCIAL_INVOICE" {
 		t.Fatal("specialServicesRequested doesn't match")
 	}

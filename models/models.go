@@ -268,7 +268,6 @@ type FreightPickupLineItem struct {
 	Description        string  `xml:"q0:Description"`
 }
 
-// TODO is this needed as its own struct? i don't think so if the Rate itself doesn't decide to do stuff differently for international (rather f Fedex does on the Shipment)
 type FromAndTo struct {
 	FromAddress Address
 	ToAddress   Address
@@ -578,9 +577,9 @@ type SpecialHandling struct {
 
 type SpecialServicesRequested struct {
 	SpecialServiceTypes     []string                 `xml:"q0:SpecialServiceTypes,omitempty"`
-	EtdDetail               *EtdDetail               `xml:"q0:EtdDetail,omitempty"`
 	EventNotificationDetail *EventNotificationDetail `xml:"q0:EventNotificationDetail,omitempty"`
 	ReturnShipmentDetail    *ReturnShipmentDetail    `xml:"q0:ReturnShipmentDetail,omitempty"`
+	EtdDetail               *EtdDetail               `xml:"q0:EtdDetail,omitempty"`
 }
 
 type StatusDetail struct {

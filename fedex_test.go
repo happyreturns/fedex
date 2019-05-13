@@ -337,6 +337,7 @@ func TestShipSmartPost(t *testing.T) {
 }
 
 func TestShipInternational(t *testing.T) {
+	var err error
 	fedex := testFedex
 	// Successful case
 	harmonizedCode := "640399206000" // TODO
@@ -398,11 +399,8 @@ func TestShipInternational(t *testing.T) {
 	fmt.Println(fedex)
 	exampleShipment.ToContact.CompanyName = "dev"
 	testShipInternational(t, testFedex, exampleShipment)
-	t.SkipNow()
 
-	// test no commodities
-	// test commodities with no customsvalue
-	// test commodities with no unitprice
+	t.SkipNow()
 
 	exampleShipment.ToContact.CompanyName = "normal"
 	testShipInternational(t, fedex, exampleShipment)
@@ -439,13 +437,27 @@ func TestShipInternational(t *testing.T) {
 	exampleShipment.ToContact.CompanyName = "more-commodities"
 	testShipInternational(t, prodFedex, exampleShipment)
 
-	// // it doesn't work with no commodities, but it did before? not sure
-	// fmt.Println(fedex)
-	// fmt.Println("No commodities")
-	// exampleShipment.Commodities = nil
-	// exampleShipment.ToContact.CompanyName = "no-commodities"
-	// testShipInternational(t, prodFedex, exampleShipment)
+	// test commodities with no unitprice
+	for _, commodity := range exampleShipment.Commodities {
+		commodity.UnitPrice = nil
+	}
+	exampleShipment.ToContact.CompanyName = "commodities-no-unit-price"
+	testShipInternational(t, prodFedex, exampleShipment)
 
+	// test commodities with no customsvalue
+	for _, commodity := range exampleShipment.Commodities {
+		commodity.CustomsValue = nil
+	}
+	exampleShipment.ToContact.CompanyName = "commodities-no-customs-value"
+	testShipInternational(t, prodFedex, exampleShipment)
+
+	// it tries to make a request with no commodities and returns back the error
+	// fedex gives us
+	// Error case - invalid tracking number
+	exampleShipment.Commodities = nil
+	exampleShipment.ToContact.CompanyName = "no-commodities"
+	_, err = prodFedex.Ship(exampleShipment)
+	checkErrorMatches(t, err, "api process shipment: make process shipment request and unmarshal: response error:")
 }
 
 func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {

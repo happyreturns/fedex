@@ -38,11 +38,11 @@ func (s *Shipment) ShippingDocumentSpecification() *ShippingDocumentSpecificatio
 					CustomerImageUsages: []CustomerImageUsage{
 						{
 							Type: "LETTER_HEAD",
-							ID:   "IMAGE_1", // TODO
+							ID:   "IMAGE_1",
 						},
 						{
 							Type: "SIGNATURE",
-							ID:   "IMAGE_2", // TODO
+							ID:   "IMAGE_2",
 						},
 					},
 				},
@@ -77,7 +77,7 @@ func (s *Shipment) DropoffType() string {
 
 func (s *Shipment) Weight() Weight {
 	commoditiesWeight := s.Commodities.Weight()
-	if !commoditiesWeight.IsZero() {
+	if !commoditiesWeight.IsZero() && s.IsInternational() {
 		return commoditiesWeight
 	}
 
@@ -99,36 +99,43 @@ func (s *Shipment) Dimensions() Dimensions {
 }
 
 func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
-	var specialServicesRequested *SpecialServicesRequested
-	switch s.ServiceType() {
-	case "SMART_POST":
-		specialServicesRequested = &SpecialServicesRequested{
-			SpecialServiceTypes: []string{"RETURN_SHIPMENT"},
-			ReturnShipmentDetail: &ReturnShipmentDetail{
-				ReturnType: "PRINT_RETURN_LABEL",
-			},
-		}
+	var (
+		specialServiceTypes []string
 
-		if s.NotificationEmail != "" {
-			specialServicesRequested.EventNotificationDetail = defaultEventNotificationDetail(s.NotificationEmail)
-		}
-	default:
-		if s.IsInternational() {
-			// TODO notifications for international shipments?
-			specialServicesRequested = &SpecialServicesRequested{
-				SpecialServiceTypes: []string{"ELECTRONIC_TRADE_DOCUMENTS"},
-				EtdDetail: &EtdDetail{
-					RequestedDocumentCopies: "COMMERCIAL_INVOICE",
-				},
-			}
-		} else if s.NotificationEmail != "" {
-			specialServicesRequested = &SpecialServicesRequested{
-				SpecialServiceTypes:     []string{"EVENT_NOTIFICATION"},
-				EventNotificationDetail: defaultEventNotificationDetail(s.NotificationEmail),
-			}
+		etdDetail               *EtdDetail
+		eventNotificationDetail *EventNotificationDetail
+		returnShipmentDetail    *ReturnShipmentDetail
+	)
+
+	if s.ServiceType() == "SMART_POST" {
+		specialServiceTypes = append(specialServiceTypes, "RETURN_SHIPMENT")
+		returnShipmentDetail = &ReturnShipmentDetail{
+			ReturnType: "PRINT_RETURN_LABEL",
 		}
 	}
-	return specialServicesRequested
+
+	if s.IsInternational() {
+		specialServiceTypes = append(specialServiceTypes, "ELECTRONIC_TRADE_DOCUMENTS")
+		etdDetail = &EtdDetail{
+			RequestedDocumentCopies: "COMMERCIAL_INVOICE",
+		}
+	}
+
+	if s.NotificationEmail != "" {
+		specialServiceTypes = append(specialServiceTypes, "EVENT_NOTIFICATION")
+		eventNotificationDetail = defaultEventNotificationDetail(s.NotificationEmail)
+	}
+
+	if len(specialServiceTypes) == 0 {
+		return nil
+	}
+	return &SpecialServicesRequested{
+		SpecialServiceTypes: specialServiceTypes,
+
+		EtdDetail:               etdDetail,
+		EventNotificationDetail: eventNotificationDetail,
+		ReturnShipmentDetail:    returnShipmentDetail,
+	}
 }
 
 func (s *Shipment) CustomerReference() CustomerReference {
