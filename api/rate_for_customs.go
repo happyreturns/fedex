@@ -21,14 +21,12 @@ func (a API) RateForCustoms(rate *models.Rate) (*models.RateReply, error) {
 }
 
 func (a API) rateForCustomsRequest(rate *models.Rate) models.Envelope {
-
-	// TODO check 800 or make different explicit function
-
 	documentContent := "NON_DOCUMENTS"
 	customsValue, err := rate.Commodities.CustomsValue()
 	if err != nil {
-		// TODO do something
+		customsValue = models.Money{Currency: "USD"}
 	}
+
 	weight := rate.Commodities.Weight()
 	if weight.IsZero() {
 		weight = models.Weight{
@@ -69,7 +67,7 @@ func (a API) rateForCustomsRequest(rate *models.Rate) models.Envelope {
 				RequestedShipment: models.RequestedShipment{
 					ShipTimestamp: models.Timestamp(time.Now()),
 					DropoffType:   "REGULAR_PICKUP",
-					ServiceType:   "FEDEX_GROUND", // TODO needed?
+					ServiceType:   "FEDEX_GROUND",
 					PackagingType: "YOUR_PACKAGING",
 					Shipper: models.Shipper{
 						AccountNumber: a.Account,

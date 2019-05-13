@@ -7,7 +7,7 @@ import (
 const (
 	notificationSeverityError   = "ERROR"
 	notificationSeverityNote    = "NOTE"
-	notificationSeverityWarning = "WARNING" // TODO should i do something with the response if it's a warning?
+	notificationSeverityWarning = "WARNING" // TODO consider doing something with the response if it's a warning
 	notificationSeveritySuccess = "SUCCESS"
 )
 

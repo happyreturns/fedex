@@ -57,8 +57,8 @@ func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) mode
 				OriginDetail: models.OriginDetail{
 					UseAccountAddress:       false,
 					PickupLocation:          pickup.PickupLocation,
-					PackageLocation:         "NONE",  // TODO not necessarily true
-					BuildingPart:            "SUITE", // TODO not necessarily true
+					PackageLocation:         "NONE",
+					BuildingPart:            "SUITE",
 					BuildingPartDescription: "",
 					ReadyTimestamp:          models.Timestamp(pickupTime(pickup.PickupLocation.Address, numDaysToDelay)),
 					CompanyCloseTime:        "16:00:00", // TODO not necessarily true

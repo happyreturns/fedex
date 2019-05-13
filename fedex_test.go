@@ -331,6 +331,41 @@ func TestShipGround(t *testing.T) {
 }
 
 func TestShipSmartPost(t *testing.T) {
+	// smartpost fail for international
+	internationalShipment := &models.Shipment{
+		FromAndTo: models.FromAndTo{
+			FromAddress: models.Address{
+				StreetLines:         []string{"1234 Main Street", "Suite 200"},
+				City:                "Winnipeg",
+				StateOrProvinceCode: "MB",
+				PostalCode:          "R2M4B5",
+				CountryCode:         "CA",
+			},
+			ToAddress: models.Address{
+				StreetLines:         []string{"1106 Broadway"},
+				City:                "Santa Monica",
+				StateOrProvinceCode: "CA",
+				PostalCode:          "90401",
+				CountryCode:         "US",
+			},
+			FromContact: models.Contact{
+				PersonName:   "Jenny",
+				PhoneNumber:  "213 867 5309",
+				EmailAddress: "jenny@jenny.com",
+			},
+			ToContact: models.Contact{
+				CompanyName:  "normal",
+				PhoneNumber:  "214 867 5309",
+				EmailAddress: "somecompany@somecompany.com",
+			},
+		},
+		NotificationEmail: "dev-notifications@happyreturns.com",
+		Reference:         "My ship ground reference",
+		Commodities:       []models.Commodity{},
+	}
+	_, err := laSmartPostFedex.Ship(internationalShipment)
+	checkErrorMatches(t, err, "do not ship internationally with smartpost")
+
 	// Successful cases
 	testShipSmartPostSuccess(t, laSmartPostFedex)
 	testShipSmartPostSuccess(t, blandonSmartPostFedex)
@@ -404,14 +439,6 @@ func TestShipInternational(t *testing.T) {
 
 	exampleShipment.ToContact.CompanyName = "normal"
 	testShipInternational(t, fedex, exampleShipment)
-
-	// it also works with smartpost la account
-	fmt.Println("smartpost la")
-	testShipInternational(t, laSmartPostFedex, exampleShipment)
-
-	// it also works with smartpost pa account
-	fmt.Println("smartpost blandon")
-	testShipInternational(t, blandonSmartPostFedex, exampleShipment)
 
 	// it also works with no email
 	fmt.Println("No email")

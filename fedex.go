@@ -4,6 +4,7 @@
 package fedex
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/happyreturns/fedex/api"
@@ -77,6 +78,10 @@ func (f Fedex) SendNotifications(trackingNo, email string) (*models.SendNotifica
 }
 
 func (f Fedex) Ship(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
+	if f.API.HubID != "" && shipment.IsInternational() {
+		return nil, errors.New("do not ship internationally with smartpost")
+	}
+
 	commodities, err := f.commoditiesWithCustoms(shipment)
 	if err != nil {
 		return nil, fmt.Errorf("commodities with customs: %s", err)

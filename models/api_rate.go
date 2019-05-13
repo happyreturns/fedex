@@ -61,17 +61,9 @@ func (rr *RateReply) DutiesAndTaxesByItem() ([]Charge, error) {
 		return nil, fmt.Errorf("first rated shipment details: %s", err)
 	}
 
-	charges := make([]Charge, len(rateDetail.DutiesAndTaxes))
-	for idx, dutyAndTax := range rateDetail.DutiesAndTaxes {
-		// sum up the all the taxes for this item
-		// TODO make me its own function
-		if len(dutyAndTax.Taxes) == 0 {
-			return nil, errors.New("dutyAndTax has length 0")
-		}
-		charges[idx] = Charge{Currency: dutyAndTax.Taxes[0].Amount.Currency}
-		for _, tax := range dutyAndTax.Taxes {
-			charges[idx].Amount += tax.Amount.Amount
-		}
+	charges, err := rateDetail.TaxByItem()
+	if err != nil {
+		return nil, fmt.Errorf("tax by item: %s", err)
 	}
 
 	return charges, nil

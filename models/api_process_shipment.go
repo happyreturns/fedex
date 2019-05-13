@@ -11,7 +11,8 @@ type Shipment struct {
 	Service           string
 
 	// Only used for international ground shipments
-	Commodities Commodities
+	OriginatorName string
+	Commodities    Commodities
 }
 
 func (s *Shipment) ServiceType() string {

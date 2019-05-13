@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -401,6 +402,22 @@ type RateDetail struct {
 	TotalNetChargeWithDutiesAndTaxes Charge
 	Surcharges                       []Surcharge
 	DutiesAndTaxes                   []EdtCommodityTax
+}
+
+func (rd *RateDetail) TaxByItem() ([]Charge, error) {
+	charges := make([]Charge, len(rd.DutiesAndTaxes))
+	for idx, dutyAndTax := range rd.DutiesAndTaxes {
+		// sum up the all the taxes for this item
+		if len(dutyAndTax.Taxes) == 0 {
+			return nil, errors.New("dutyAndTax has length 0")
+		}
+
+		charges[idx] = Charge{Currency: dutyAndTax.Taxes[0].Amount.Currency}
+		for _, tax := range dutyAndTax.Taxes {
+			charges[idx].Amount += tax.Amount.Amount
+		}
+	}
+	return charges, nil
 }
 
 type RateReplyDetail struct {

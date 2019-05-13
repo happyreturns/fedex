@@ -136,7 +136,7 @@ func TestGroundShipmentNotInternational(t *testing.T) {
 		t.Fatal("specialServicesRequested doesn't match")
 	}
 
-	// TODO not gonna bother validating every single field
+	// not gonna bother validating every single field
 }
 
 func TestGroundShipmentInternational(t *testing.T) {
@@ -259,25 +259,6 @@ func TestGroundShipmentInternational(t *testing.T) {
 		t.Fatal("specialServicesRequested doesn't match")
 	}
 
-	// // TODO CustomsClearanceDetail
-	// expectedDutiesPayment := models.Payment{
-	// 	PaymentType: "SENDER",
-	// 	Payor: models.Payor{
-	// 		ResponsibleParty: models.ResponsibleParty{
-	// 			AccountNumber: "Account",
-	// 		},
-	// 	},
-	// }
-
-	// money := &models.Money{Currency: "USD", Amount: 30.00 + 381.12}
-	// if ccd := processShipment.RequestedShipment.CustomsClearanceDetail; ccd.DutiesPayment != expectedDutiesPayment ||
-	// 	ccd.CustomsValue != money {
-	// 	// len(ccd.Commodities) != 2 ||
-	// 	// ccd.Commodities[0] != commodities[0] ||
-	// 	// ccd.Commodities[1] != commodities[1]
-	// 	t.Fatal("customsValue doesn't match")
-	// }
-
 	if ls := processShipment.RequestedShipment.LabelSpecification; ls.LabelFormatType != "COMMON2D" ||
 		ls.ImageType != "PDF" ||
 		*ls.LabelStockType != "PAPER_4X6" {
@@ -299,7 +280,4 @@ func TestGroundShipmentInternational(t *testing.T) {
 		cid.CustomerImageUsages[1].ID != "IMAGE_2" {
 		t.Fatal("ShippingDocumentSpecification doesn't match")
 	}
-	// TODO do i need PackageCount, RequestedPackageLineItems?
-	// TODO do i need this?
-	// fmt.Println(processShipment.RequestedShipment.ShippingChargesPayment.ResponsibleParty)
 }

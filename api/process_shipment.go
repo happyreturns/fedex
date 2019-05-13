@@ -123,7 +123,7 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 		PartiesToTransactionAreRelated: false,
 		CommercialInvoice: &models.CommercialInvoice{
 			Purpose:        "REPAIR_AND_RETURN",
-			OriginatorName: "Happy Returns", // TODO
+			OriginatorName: shipment.OriginatorName,
 		},
 	}, nil
 }
