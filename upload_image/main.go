@@ -26,21 +26,6 @@ func main() {
 		panic(err)
 	}
 
-	///////////////////////////////////////////////////// COMM INVOICE STUFF
-	commInvoiceData, err := ioutil.ReadFile("../commercialencoded.txt")
-	if err != nil {
-		panic(err)
-	}
-	data, err := base64.StdEncoding.DecodeString(string(commInvoiceData))
-	if err != nil {
-		panic(err)
-	}
-	err = ioutil.WriteFile(fmt.Sprintf("commercial-invoice.pdf"), data, 0644)
-	if err != nil {
-		panic(err)
-	}
-	///////////////////////////////////////////////////
-
 	prodFedex := creds["test"]
 
 	err = prodFedex.UploadImages([]models.Image{

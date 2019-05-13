@@ -91,7 +91,6 @@ func (f Fedex) Ship(shipment *models.Shipment) (*models.ProcessShipmentReply, er
 	return reply, nil
 }
 
-// TODO get me to work
 func (f Fedex) UploadImages(images []models.Image) error {
 	err := f.API.UploadImages(images)
 	if err != nil {

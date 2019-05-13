@@ -39,7 +39,7 @@ func (a API) uploadImagesRequest(images []models.Image) models.Envelope {
 					},
 					Version: models.Version{
 						ServiceID: "cdus",
-						Major:     12,
+						Major:     11,
 					},
 				},
 				Images: images,
