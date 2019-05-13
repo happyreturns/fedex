@@ -83,6 +83,9 @@ func (rr *RateReply) TaxableValues() ([]Charge, error) {
 		// Assume the customs value is the first taxable value of the first tax,
 		// even though there may be many taxes with different taxable values
 		charges[idx] = Charge{Currency: dutyAndTax.Taxes[0].TaxableValue.Currency}
+		for _, tax := range dutyAndTax.Taxes {
+			charges[idx].Amount += tax.Amount.Amount
+		}
 	}
 
 	return charges, nil

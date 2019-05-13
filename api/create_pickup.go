@@ -102,8 +102,8 @@ func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
 
 	pickupTime := time.Now().In(location)
 
+	// If it's past 12pm, ship the next day, not today
 	if pickupTime.Hour() >= 12 {
-		// If it's past 12pm, ship the next day, not today
 		pickupTime = pickupTime.Add(24 * time.Hour)
 	}
 
