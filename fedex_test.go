@@ -435,8 +435,6 @@ func TestShipInternational(t *testing.T) {
 	exampleShipment.ToContact.CompanyName = "dev"
 	testShipInternational(t, testFedex, exampleShipment)
 
-	t.SkipNow()
-
 	exampleShipment.ToContact.CompanyName = "normal"
 	testShipInternational(t, fedex, exampleShipment)
 

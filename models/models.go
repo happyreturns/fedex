@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 type Address struct {
@@ -86,6 +87,8 @@ func (c Commodities) CustomsValue() (Money, error) {
 		}
 		total.Amount += commodity.CustomsValue.Amount
 	}
+
+	total.Amount = math.Ceil(total.Amount*100.0) / 100.0
 	return total, nil
 }
 
