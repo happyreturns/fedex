@@ -14,6 +14,10 @@ type Rate struct {
 	Commodities Commodities
 }
 
+type RateBody struct {
+	RateRequest RateRequest `xml:"q0:RateRequest"`
+}
+
 type RateRequest struct {
 	Request
 	RequestedShipment RequestedShipment `xml:"q0:RequestedShipment"`

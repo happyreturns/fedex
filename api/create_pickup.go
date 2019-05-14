@@ -34,9 +34,7 @@ func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) mode
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/pickup/v17",
-		Body: struct {
-			CreatePickupRequest models.CreatePickupRequest `xml:"q0:CreatePickupRequest"`
-		}{
+		Body: models.CreatePickupBody{
 			CreatePickupRequest: models.CreatePickupRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{

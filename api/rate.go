@@ -26,9 +26,7 @@ func (a API) rateRequest(rate *models.Rate) models.Envelope {
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/rate/v24",
-		Body: struct {
-			RateRequest models.RateRequest `xml:"q0:RateRequest"`
-		}{
+		Body: models.RateBody{
 			RateRequest: models.RateRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{

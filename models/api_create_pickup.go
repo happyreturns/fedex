@@ -6,6 +6,10 @@ type Pickup struct {
 	ToAddress      Address
 }
 
+type CreatePickupBody struct {
+	CreatePickupRequest CreatePickupRequest `xml:"q0:CreatePickupRequest"`
+}
+
 type CreatePickupRequest struct {
 	Request
 	OriginDetail         OriginDetail        `xml:"q0:OriginDetail"`

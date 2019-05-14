@@ -29,61 +29,59 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (models.Envelope,
 	}
 
 	packageCount := 1
-	req := models.ProcessShipmentRequest{
-		Request: models.Request{
-			WebAuthenticationDetail: models.WebAuthenticationDetail{
-				UserCredential: models.UserCredential{
-					Key:      a.Key,
-					Password: a.Password,
-				},
-			},
-			ClientDetail: models.ClientDetail{
-				AccountNumber: a.Account,
-				MeterNumber:   a.Meter,
-			},
-			Version: models.Version{
-				ServiceID: "ship",
-				Major:     23,
-			},
-		},
-		RequestedShipment: models.RequestedShipment{
-			ShipTimestamp: models.Timestamp(time.Now()),
-			DropoffType:   shipment.DropoffType(),
-			ServiceType:   shipment.ServiceType(),
-			PackagingType: "YOUR_PACKAGING",
-			Shipper: models.Shipper{
-				AccountNumber: a.Account,
-				Address:       shipment.FromAddress,
-				Contact:       shipment.FromContact,
-			},
-			Recipient: models.Shipper{
-				AccountNumber: a.Account,
-				Address:       shipment.ToAddress,
-				Contact:       shipment.ToContact,
-			},
-			ShippingChargesPayment: &models.Payment{
-				PaymentType: "SENDER",
-				Payor: models.Payor{
-					ResponsibleParty: models.ResponsibleParty{
-						AccountNumber: a.Account,
-					},
-				},
-			},
-			SmartPostDetail:               a.SmartPostDetail(shipment),
-			SpecialServicesRequested:      shipment.SpecialServicesRequested(),
-			CustomsClearanceDetail:        customsClearanceDetail,
-			LabelSpecification:            shipment.LabelSpecification(),
-			ShippingDocumentSpecification: shipment.ShippingDocumentSpecification(),
-			PackageCount:                  &packageCount,
-			RequestedPackageLineItems:     shipment.RequestedPackageLineItems(),
-		},
-	}
-
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/ship/v23",
 		Body: models.ProcessShipmentBody{
-			ProcessShipmentRequest: req,
+			ProcessShipmentRequest: models.ProcessShipmentRequest{
+				Request: models.Request{
+					WebAuthenticationDetail: models.WebAuthenticationDetail{
+						UserCredential: models.UserCredential{
+							Key:      a.Key,
+							Password: a.Password,
+						},
+					},
+					ClientDetail: models.ClientDetail{
+						AccountNumber: a.Account,
+						MeterNumber:   a.Meter,
+					},
+					Version: models.Version{
+						ServiceID: "ship",
+						Major:     23,
+					},
+				},
+				RequestedShipment: models.RequestedShipment{
+					ShipTimestamp: models.Timestamp(time.Now()),
+					DropoffType:   shipment.DropoffType(),
+					ServiceType:   shipment.ServiceType(),
+					PackagingType: "YOUR_PACKAGING",
+					Shipper: models.Shipper{
+						AccountNumber: a.Account,
+						Address:       shipment.FromAddress,
+						Contact:       shipment.FromContact,
+					},
+					Recipient: models.Shipper{
+						AccountNumber: a.Account,
+						Address:       shipment.ToAddress,
+						Contact:       shipment.ToContact,
+					},
+					ShippingChargesPayment: &models.Payment{
+						PaymentType: "SENDER",
+						Payor: models.Payor{
+							ResponsibleParty: models.ResponsibleParty{
+								AccountNumber: a.Account,
+							},
+						},
+					},
+					SmartPostDetail:               a.SmartPostDetail(shipment),
+					SpecialServicesRequested:      shipment.SpecialServicesRequested(),
+					CustomsClearanceDetail:        customsClearanceDetail,
+					LabelSpecification:            shipment.LabelSpecification(),
+					ShippingDocumentSpecification: shipment.ShippingDocumentSpecification(),
+					PackageCount:                  &packageCount,
+					RequestedPackageLineItems:     shipment.RequestedPackageLineItems(),
+				},
+			},
 		},
 	}, nil
 }

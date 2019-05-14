@@ -23,9 +23,7 @@ func (a API) sendNotificationsRequest(trackingNo, email string) models.Envelope 
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",
-		Body: struct {
-			SendNotificationsRequest models.SendNotificationsRequest `xml:"q0:SendNotificationsRequest"`
-		}{
+		Body: models.SendNotificationsBody{
 			SendNotificationsRequest: models.SendNotificationsRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{

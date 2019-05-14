@@ -21,9 +21,7 @@ func (a API) trackByNumberRequest(carrierCode string, trackingNo string) models.
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",
-		Body: struct {
-			TrackRequest models.TrackRequest `xml:"q0:TrackRequest"`
-		}{
+		Body: models.TrackBody{
 			TrackRequest: models.TrackRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{

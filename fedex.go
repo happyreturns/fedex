@@ -82,12 +82,6 @@ func (f Fedex) Ship(shipment *models.Shipment) (*models.ProcessShipmentReply, er
 		return nil, errors.New("do not ship internationally with smartpost")
 	}
 
-	commodities, err := f.commoditiesWithCustoms(shipment)
-	if err != nil {
-		return nil, fmt.Errorf("commodities with customs: %s", err)
-	}
-	shipment.Commodities = commodities
-
 	reply, err := f.API.ProcessShipment(shipment)
 	if err != nil {
 		return nil, fmt.Errorf("api process shipment: %s", err)
@@ -102,56 +96,4 @@ func (f Fedex) UploadImages(images []models.Image) error {
 		return fmt.Errorf("upload images: %s", err)
 	}
 	return nil
-}
-
-// TODO unit price or customs value on shipment.Commodities
-func (f Fedex) commoditiesWithCustoms(shipment *models.Shipment) (models.Commodities, error) {
-	needsInvoice, err := needsCustomCommercialInvoice(shipment)
-	if err != nil {
-		return nil, fmt.Errorf("needs custom commercial invoice: %s", err)
-	}
-	if !needsInvoice {
-		return shipment.Commodities, nil
-	}
-
-	rateReply, err := f.API.RateForCustoms(&models.Rate{
-		FromAndTo:   shipment.FromAndTo,
-		Commodities: shipment.Commodities,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("rate for customs: %s", err)
-	}
-
-	charges, err := rateReply.TaxableValues()
-	if err != nil {
-		return nil, fmt.Errorf("taxable values: %s", err)
-	}
-	if len(charges) != len(shipment.Commodities) {
-		return nil, fmt.Errorf("charges should match commodities length %d %d", len(charges), len(shipment.Commodities))
-	}
-
-	// TODO not 100% sure what to do with this, or if this is right
-	newCommodities := make([]models.Commodity, len(shipment.Commodities))
-	for idx, commodity := range shipment.Commodities {
-		newCommodities[idx] = commodity
-		newCommodities[idx].CustomsValue = &models.Money{
-			Currency: charges[idx].Currency,
-			Amount:   charges[idx].Amount,
-		}
-		newCommodities[idx].UnitPrice = nil
-	}
-
-	return newCommodities, nil
-}
-
-func needsCustomCommercialInvoice(shipment *models.Shipment) (bool, error) {
-	if !shipment.IsInternational() {
-		return false, nil
-	}
-
-	customsValue, err := shipment.Commodities.CustomsValue()
-	if err != nil {
-		return false, fmt.Errorf("customs value: %s", err)
-	}
-	return customsValue.Currency == "USD" && customsValue.Amount >= 800, nil
 }
