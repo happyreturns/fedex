@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,10 +20,13 @@ func init() {
 }
 
 func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.CreatePickupReply, error) {
-	request := a.createPickupRequest(pickup, numDaysToDelay)
-	response := &models.CreatePickupResponseEnvelope{}
+	request, err := a.createPickupRequest(pickup, numDaysToDelay)
+	if err != nil {
+		return nil, fmt.Errorf("create pickup request: %s", err)
+	}
 
-	err := a.makeRequestAndUnmarshalResponse("/pickup/v17", request, response)
+	response := &models.CreatePickupResponseEnvelope{}
+	err = a.makeRequestAndUnmarshalResponse("/pickup/v17", request, response)
 	if err != nil {
 		return nil, fmt.Errorf("make create pickup request and unmarshal: %s", err)
 	}
@@ -30,7 +34,12 @@ func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.Cr
 	return &response.Reply, nil
 }
 
-func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) models.Envelope {
+func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) (models.Envelope, error) {
+
+	pickupTime, err := calculatePickupTime(pickup.PickupLocation.Address, numDaysToDelay)
+	if err != nil {
+		return models.Envelope{}, fmt.Errorf("calculate pickup time: %s", err)
+	}
 	return models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/pickup/v17",
@@ -58,7 +67,7 @@ func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) mode
 					PackageLocation:         "NONE",
 					BuildingPart:            "SUITE",
 					BuildingPartDescription: "",
-					ReadyTimestamp:          models.Timestamp(pickupTime(pickup.PickupLocation.Address, numDaysToDelay)),
+					ReadyTimestamp:          models.Timestamp(pickupTime),
 					CompanyCloseTime:        "16:00:00", // TODO not necessarily true
 				},
 				FreightPickupDetail: models.FreightPickupDetail{
@@ -89,33 +98,29 @@ func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) mode
 				CommodityDescription: "",
 			},
 		},
-	}
+	}, nil
 }
 
-func pickupTime(pickupAddress models.Address, numDaysToDelay int) time.Time {
+func calculatePickupTime(pickupAddress models.Address, numDaysToDelay int) (time.Time, error) {
 	location, err := toLocation(pickupAddress)
 	if err != nil {
 		location = laTimeZone
 	}
 
-	pickupTime := time.Now().In(location)
+	pickupTime := time.Now().In(location).Add(time.Duration(numDaysToDelay*24) * time.Hour)
 
 	// If it's past 12pm, ship the next day, not today
 	if pickupTime.Hour() >= 12 {
 		pickupTime = pickupTime.Add(24 * time.Hour)
 	}
 
-	pickupTime = pickupTime.Add(time.Duration(numDaysToDelay*24) * time.Hour)
-
 	// Don't schedule pickups for Saturday or Sunday
-	if pickupTime.Weekday() == time.Saturday {
-		pickupTime = pickupTime.Add(48 * time.Hour)
-	} else if pickupTime.Weekday() == time.Sunday {
-		pickupTime = pickupTime.Add(24 * time.Hour)
+	if pickupTime.Weekday() == time.Saturday || pickupTime.Weekday() == time.Sunday {
+		return time.Time{}, errors.New("no pickups on saturday or sunday")
 	}
 
 	year, month, day := pickupTime.Date()
-	return time.Date(year, month, day, 12, 0, 0, 0, location)
+	return time.Date(year, month, day, 12, 0, 0, 0, location), nil
 }
 
 // toLocation attempts to return the timezone based on state, returning los
