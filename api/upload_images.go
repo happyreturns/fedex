@@ -6,25 +6,27 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-func (a API) UploadImages(images []models.Image) error {
-	request := a.uploadImagesRequest(images)
+const (
+	uploadVersion = "v11"
+)
 
+func (a API) UploadImages(images []models.Image) error {
+	endpoint := fmt.Sprintf("/uploaddocument/%s", uploadVersion)
+	request := a.uploadImagesRequest(images)
 	response := &models.UploadImagesResponseEnvelope{}
-	if err := a.makeRequestAndUnmarshalResponse("/uploaddocument/v11", request, response); err != nil {
+
+	if err := a.makeRequestAndUnmarshalResponse(endpoint, request, response); err != nil {
 		return fmt.Errorf("make upload images request and unmarshal: %s", err)
 	}
 
 	return nil
 }
 
-func (a API) uploadImagesRequest(images []models.Image) models.Envelope {
-	// body
-	return models.Envelope{
+func (a API) uploadImagesRequest(images []models.Image) *models.Envelope {
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/uploaddocument/v11",
-		Body: struct {
-			UploadImagesRequest models.UploadImagesRequest `xml:"q0:UploadImagesRequest"`
-		}{
+		Namespace: fmt.Sprintf("http://fedex.com/ws/uploaddocument/%s", uploadVersion),
+		Body: models.UploadImagesBody{
 			UploadImagesRequest: models.UploadImagesRequest{
 				Request: models.Request{
 					WebAuthenticationDetail: models.WebAuthenticationDetail{

@@ -9,6 +9,10 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
+const (
+	createPickupVersion = "v17"
+)
+
 var laTimeZone *time.Location
 
 func init() {
@@ -25,8 +29,9 @@ func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.Cr
 		return nil, fmt.Errorf("create pickup request: %s", err)
 	}
 
+	endpoint := fmt.Sprintf("/pickup/%s", createPickupVersion)
 	response := &models.CreatePickupResponseEnvelope{}
-	err = a.makeRequestAndUnmarshalResponse("/pickup/v17", request, response)
+	err = a.makeRequestAndUnmarshalResponse(endpoint, request, response)
 	if err != nil {
 		return nil, fmt.Errorf("make create pickup request and unmarshal: %s", err)
 	}
@@ -34,15 +39,15 @@ func (a API) CreatePickup(pickup *models.Pickup, numDaysToDelay int) (*models.Cr
 	return &response.Reply, nil
 }
 
-func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) (models.Envelope, error) {
+func (a API) createPickupRequest(pickup *models.Pickup, numDaysToDelay int) (*models.Envelope, error) {
 
 	pickupTime, err := calculatePickupTime(pickup.PickupLocation.Address, numDaysToDelay)
 	if err != nil {
-		return models.Envelope{}, fmt.Errorf("calculate pickup time: %s", err)
+		return nil, fmt.Errorf("calculate pickup time: %s", err)
 	}
-	return models.Envelope{
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/pickup/v17",
+		Namespace: fmt.Sprintf("http://fedex.com/ws/pickup/%s", createPickupVersion),
 		Body: models.CreatePickupBody{
 			CreatePickupRequest: models.CreatePickupRequest{
 				Request: models.Request{

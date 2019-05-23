@@ -6,23 +6,28 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
+const (
+	sendNotificationsVersion = "v16"
+)
+
 // SendNotifications gets notifications sent to an email
 func (a API) SendNotifications(trackingNo, email string) (*models.SendNotificationsReply, error) {
 
+	endpoint := fmt.Sprintf("/track/%s", sendNotificationsVersion)
 	request := a.sendNotificationsRequest(trackingNo, email)
 	response := &models.SendNotificationsResponseEnvelope{}
 
-	err := a.makeRequestAndUnmarshalResponse("/track/v16", request, response)
+	err := a.makeRequestAndUnmarshalResponse(endpoint, request, response)
 	if err != nil {
 		return nil, fmt.Errorf("make send notifications request: %s", err)
 	}
 	return &response.Reply, nil
 }
 
-func (a API) sendNotificationsRequest(trackingNo, email string) models.Envelope {
-	return models.Envelope{
+func (a API) sendNotificationsRequest(trackingNo, email string) *models.Envelope {
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/track/v16",
+		Namespace: fmt.Sprintf("http://fedex.com/ws/track/%s", sendNotificationsVersion),
 		Body: models.SendNotificationsBody{
 			SendNotificationsRequest: models.SendNotificationsRequest{
 				Request: models.Request{

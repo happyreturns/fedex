@@ -170,7 +170,7 @@ func defaultEventNotificationDetail(notificationEmail string) *EventNotification
 				NotificationType: "EMAIL",
 				EmailDetail: EmailDetail{
 					EmailAddress: notificationEmail,
-					Name:         "TEST NAME",
+					Name:         "Happy Returns dev team",
 				},
 				Localization: Localization{
 					LanguageCode: "en",

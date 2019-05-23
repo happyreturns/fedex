@@ -46,7 +46,7 @@ func TestTrack(t *testing.T) {
 
 	// Error case - invalid tracking
 	_, err = testFedex.TrackByNumber(CarrierCodeExpress, "dkfjdkfj")
-	checkErrorMatches(t, err, "api track by number: make track request and unmarshal: response error: track detail error:")
+	checkErrorMatches(t, err, "make track request and unmarshal: response error: track detail error:")
 
 	// Successful case
 	reply, err = testFedex.TrackByNumber(CarrierCodeExpress, "123456789012")
@@ -130,7 +130,7 @@ func TestTrack(t *testing.T) {
 func TestRate(t *testing.T) {
 	// Error case - invalid request
 	_, err := prodFedex.Rate(&models.Rate{})
-	checkErrorMatches(t, err, "api rate: make rate request and unmarshal: response error: reply got error:")
+	checkErrorMatches(t, err, "make rate request and unmarshal: response error: reply got error:")
 
 	// Successful case
 	reply, err := prodFedex.Rate(
@@ -577,7 +577,7 @@ func TestCreatePickup(t *testing.T) {
 func TestSendNotifications(t *testing.T) {
 	// Error case - invalid tracking number
 	_, err := prodFedex.SendNotifications("123", "dev-notifications@happyreturns.com")
-	checkErrorMatches(t, err, "api send notifications: make send notifications request: response error: reply got error: Invalid tracking numbers.")
+	checkErrorMatches(t, err, "make send notifications request: response error: reply got error: Invalid tracking numbers.")
 
 	// Successful case
 	reply, err := prodFedex.SendNotifications("02396343485320152281", "dev-notifications@happyreturns.com")

@@ -1,5 +1,9 @@
 package models
 
+type UploadImagesBody struct {
+	UploadImagesRequest UploadImagesRequest `xml:"q0:UploadImagesRequest"`
+}
+
 type UploadImagesRequest struct {
 	Request
 	Images []Image `xml:"q0:Images"`

@@ -7,12 +7,17 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
+const (
+	rateVersion = "v24"
+)
+
 func (a API) Rate(rate *models.Rate) (*models.RateReply, error) {
 
+	endpoint := fmt.Sprintf("/rate/%s", rateVersion)
 	request := a.rateRequest(rate)
 	response := &models.RateResponseEnvelope{}
 
-	err := a.makeRequestAndUnmarshalResponse("/rate/v24", request, response)
+	err := a.makeRequestAndUnmarshalResponse(endpoint, request, response)
 	if err != nil {
 		return nil, fmt.Errorf("make rate request and unmarshal: %s", err)
 	}
@@ -20,12 +25,12 @@ func (a API) Rate(rate *models.Rate) (*models.RateReply, error) {
 	return &response.Reply, nil
 }
 
-func (a API) rateRequest(rate *models.Rate) models.Envelope {
+func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 	rateRequestTypes := "LIST"
 	packageCount := 1
-	return models.Envelope{
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/rate/v24",
+		Namespace: fmt.Sprintf("http://fedex.com/ws/rate/%s", rateVersion),
 		Body: models.RateBody{
 			RateRequest: models.RateRequest{
 				Request: models.Request{
@@ -40,7 +45,7 @@ func (a API) rateRequest(rate *models.Rate) models.Envelope {
 						MeterNumber:   a.Meter,
 					},
 					TransactionDetail: &models.TransactionDetail{
-						CustomerTransactionID: "RAS Example",
+						CustomerTransactionID: "Rate Request",
 					},
 					Version: models.Version{
 						ServiceID: "crs",

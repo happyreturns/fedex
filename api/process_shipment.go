@@ -8,30 +8,35 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
+const (
+	processShipmentVersion = "v23"
+)
+
 func (a API) ProcessShipment(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
 	request, err := a.processShipmentRequest(shipment)
 	if err != nil {
 		return nil, fmt.Errorf("create process shipment request: %s", err)
 	}
 
+	endpoint := fmt.Sprintf("/ship/%s", processShipmentVersion)
 	response := &models.ShipResponseEnvelope{}
-	if err := a.makeRequestAndUnmarshalResponse("/ship/v23", request, response); err != nil {
+	if err := a.makeRequestAndUnmarshalResponse(endpoint, request, response); err != nil {
 		return nil, fmt.Errorf("make process shipment request and unmarshal: %s", err)
 	}
 
 	return &response.Reply, nil
 }
 
-func (a API) processShipmentRequest(shipment *models.Shipment) (models.Envelope, error) {
+func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope, error) {
 	customsClearanceDetail, err := a.customsClearanceDetail(shipment)
 	if err != nil {
-		return models.Envelope{}, fmt.Errorf("customs clearance detail: %s", err)
+		return nil, fmt.Errorf("customs clearance detail: %s", err)
 	}
 
 	packageCount := 1
-	return models.Envelope{
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
-		Namespace: "http://fedex.com/ws/ship/v23",
+		Namespace: fmt.Sprintf("http://fedex.com/ws/ship/%s", processShipmentVersion),
 		Body: models.ProcessShipmentBody{
 			ProcessShipmentRequest: models.ProcessShipmentRequest{
 				Request: models.Request{
@@ -99,7 +104,7 @@ func (a API) SmartPostDetail(shipment *models.Shipment) *models.SmartPostDetail 
 
 func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsClearanceDetail, error) {
 	if !shipment.IsInternational() {
-		return nil, nil // TODO is this weird
+		return nil, nil
 	}
 
 	customsValue, err := shipment.Commodities.CustomsValue()

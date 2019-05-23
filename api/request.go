@@ -10,7 +10,7 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-func (a API) makeRequestAndUnmarshalResponse(url string, request models.Envelope,
+func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelope,
 	response models.Response) error {
 	// Create request body
 	reqXML, err := xml.Marshal(request)

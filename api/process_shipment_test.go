@@ -130,7 +130,7 @@ func TestGroundShipmentNotInternational(t *testing.T) {
 		ssr.EventNotificationDetail.EventNotifications[0].Events[4] != "ON_TENDER" ||
 		ssr.EventNotificationDetail.EventNotifications[0].NotificationDetail.NotificationType != "EMAIL" ||
 		ssr.EventNotificationDetail.EventNotifications[0].NotificationDetail.EmailDetail.EmailAddress != "NotificationEmail" ||
-		ssr.EventNotificationDetail.EventNotifications[0].NotificationDetail.EmailDetail.Name != "TEST NAME" ||
+		ssr.EventNotificationDetail.EventNotifications[0].NotificationDetail.EmailDetail.Name != "Happy Returns dev team" ||
 		ssr.EventNotificationDetail.EventNotifications[0].NotificationDetail.Localization.LanguageCode != "en" ||
 		ssr.EventNotificationDetail.EventNotifications[0].FormatSpecification.Type != "HTML" {
 		t.Fatal("specialServicesRequested doesn't match")

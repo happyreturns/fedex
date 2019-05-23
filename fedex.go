@@ -26,26 +26,7 @@ const (
 // Bypassing painful proper SOAP implementation and just crafting minimal XML messages to get the data we need.
 // Fedex WSDL docs here: http://images.fedex.com/us/developer/product/WebServices/MyWebHelp/DeveloperGuide2012.pdf
 type Fedex struct {
-	API api.API
-}
-
-// TrackByNumber returns tracking info for a specific Fedex tracking number
-func (f Fedex) TrackByNumber(carrierCode string, trackingNo string) (*models.TrackReply, error) {
-	reply, err := f.API.TrackByNumber(carrierCode, trackingNo)
-	if err != nil {
-		return nil, fmt.Errorf("api track by number: %s", err)
-	}
-	return reply, nil
-
-}
-
-// Rate : Gets the estimated rates for a shipment
-func (f Fedex) Rate(rate *models.Rate) (*models.RateReply, error) {
-	reply, err := f.API.Rate(rate)
-	if err != nil {
-		return nil, fmt.Errorf("api rate: %s", err)
-	}
-	return reply, nil
+	api.API
 }
 
 // CreatePickup creates a pickup
@@ -68,15 +49,6 @@ func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.CreatePickupReply, e
 	return reply, nil
 }
 
-// SendNotifications gets notifications sent to an email
-func (f Fedex) SendNotifications(trackingNo, email string) (*models.SendNotificationsReply, error) {
-	reply, err := f.API.SendNotifications(trackingNo, email)
-	if err != nil {
-		return nil, fmt.Errorf("api send notifications: %s", err)
-	}
-	return reply, nil
-}
-
 func (f Fedex) Ship(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
 	if f.API.HubID != "" && shipment.IsInternational() {
 		return nil, errors.New("do not ship internationally with smartpost")
@@ -88,12 +60,4 @@ func (f Fedex) Ship(shipment *models.Shipment) (*models.ProcessShipmentReply, er
 	}
 
 	return reply, nil
-}
-
-func (f Fedex) UploadImages(images []models.Image) error {
-	err := f.API.UploadImages(images)
-	if err != nil {
-		return fmt.Errorf("upload images: %s", err)
-	}
-	return nil
 }

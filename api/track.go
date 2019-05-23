@@ -17,8 +17,8 @@ func (a API) TrackByNumber(carrierCode, trackingNo string) (*models.TrackReply, 
 	return &response.Reply, nil
 }
 
-func (a API) trackByNumberRequest(carrierCode string, trackingNo string) models.Envelope {
-	return models.Envelope{
+func (a API) trackByNumberRequest(carrierCode string, trackingNo string) *models.Envelope {
+	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",
 		Body: models.TrackBody{
