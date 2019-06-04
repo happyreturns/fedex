@@ -533,6 +533,26 @@ func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {
 
 }
 
+func TestPickupAvailability(t *testing.T) {
+	reply, err := prodFedex.PickupAvailability(
+		&models.Pickup{
+			PickupLocation: models.PickupLocation{
+				Address: models.Address{
+					StreetLines:         []string{"1517 Lincoln Blvd"},
+					City:                "Santa Monica",
+					StateOrProvinceCode: "CA",
+					PostalCode:          "90401",
+					CountryCode:         "US",
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(reply)
+}
+
 func TestCreatePickup(t *testing.T) {
 	t.SkipNow()
 	reply, err := prodFedex.CreatePickup(
