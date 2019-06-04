@@ -394,6 +394,17 @@ type Payor struct {
 	ResponsibleParty Shipper `xml:"q0:ResponsibleParty"`
 }
 
+type PickupScheduleOption struct {
+	Carrier              string
+	Description          string
+	ScheduleDay          string
+	Available            bool
+	PickupDate           string
+	CutOffTime           string
+	AccessTime           string
+	ResidentialAvailable bool
+}
+
 type RateDetail struct {
 	RateType                         string
 	RateZone                         string
