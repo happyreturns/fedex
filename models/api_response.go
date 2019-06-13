@@ -1,9 +1,5 @@
 package models
 
-import (
-	"fmt"
-)
-
 const (
 	notificationSeverityError   = "ERROR"
 	notificationSeverityNote    = "NOTE"
@@ -30,12 +26,15 @@ func (r Reply) Error() error {
 		return nil
 	}
 
+	err := ReplyError{Severity: r.HighestSeverity}
 	for _, notification := range r.Notifications {
 		if notification.Severity == r.HighestSeverity {
-			return fmt.Errorf("reply got error: %s", notification.Message)
+			err.Message = notification.Message
+			break
 		}
 	}
-	return fmt.Errorf("reply got status: %s", r.HighestSeverity)
+
+	return err
 }
 
 type Notification struct {

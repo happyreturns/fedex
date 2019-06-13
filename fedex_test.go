@@ -205,6 +205,75 @@ func TestRate(t *testing.T) {
 	}
 }
 
+func TestPickupAvailabilityActual(t *testing.T) {
+}
+
+func TestCreatePickupActual(t *testing.T) {
+
+	// address := models.Address{
+	// 				StreetLines:         []string{"8500 Beverly Center Blvd., Guest Service Desk Level 6"},
+	// 				City:                "Los Angeles",
+	// 				StateOrProvinceCode: "CA",
+	// 				PostalCode:          "90048",
+	// 				CountryCode:         "US",
+	// 			}
+
+	fromAddress := models.Address{
+		StreetLines:         []string{"919 W Armitage Ave."},
+		City:                "Chicago",
+		StateOrProvinceCode: "IL",
+		PostalCode:          "60614",
+		CountryCode:         "US",
+	}
+
+	toAddress := models.Address{
+		StreetLines:         []string{"311 June Avenue"},
+		City:                "Blandon",
+		StateOrProvinceCode: "PA",
+		PostalCode:          "19510",
+		CountryCode:         "US",
+	}
+
+	reply, err := prodFedex.CreatePickup(
+		&models.Pickup{
+			PickupLocation: models.PickupLocation{
+				Address: fromAddress,
+				Contact: models.Contact{
+					PersonName:  "Happy Returns",
+					PhoneNumber: "+1 424 325 9510",
+				}},
+			ToAddress: toAddress,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(reply)
+	t.SkipNow()
+}
+
+func TestCancelPickupActual(t *testing.T) {
+
+	pickupNumbers := []string{
+		"CPU2001091621", // I just made this for 919 W Armitage pschlp to Blandon. I don't get why I never saw this in the console
+		// "CPU2134991620",
+		// "CPU1182291621",
+		// "CPU15091621",
+		// "CPU15191621",
+		// "CPU15291621",
+		// "CPU25491620",
+		// "CPU15291621",
+	}
+
+	for _, pickupNumber := range pickupNumbers {
+		reply, err := prodFedex.CancelPickup(pickupNumber)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(reply)
+	}
+}
+
 func TestActual(t *testing.T) {
 	t.SkipNow()
 	myBytes := []byte(`{"FromAddress":{"StreetLines":["1290 Rue Belvédère S",""],"City":"Sherbrooke","StateOrProvinceCode":"QC","PostalCode":"J1H 4C7","CountryCode":"CA","Residential":false},"ToAddress":{"StreetLines":["1106 Broadway",""],"City":"Santa Monica","StateOrProvinceCode":"CA","PostalCode":"90401","CountryCode":"US","Residential":false},"FromContact":{"PersonName":"Jenny","CompanyName":"Jenny","PhoneNumber":"1 (214) 867-5309","EmailAddress":""},"ToContact":{"PersonName":"Happy Returns","CompanyName":"Happy Returns","PhoneNumber":"424 325 9510","EmailAddress":""},"NotificationEmail":"","Reference":"","Service":"return","Commodities":[{"Name":"","NumberOfPieces":0,"Description":"","CountryOfManufacture":"","Weight":{"Units":"LB","Value":2},"Quantity":0,"QuantityUnits":"","UnitPrice":{"Currency":"USD","Amount":128},"CustomsValue":{"Currency":"USD","Amount":128}}]}`)
@@ -219,17 +288,18 @@ func TestActual(t *testing.T) {
 
 func TestShipGround(t *testing.T) {
 	// Error case - invalid shipment
-	_, err := prodFedex.Ship(&models.Shipment{})
-	checkErrorMatches(t, err, "api process shipment: make process shipment request and unmarshal: response error: reply got error:")
+	// _, err := prodFedex.Ship(&models.Shipment{})
+	// d4d00e62-8e25-11e9-a4fc-0242ac110003
+	// checkErrorMatches(t, err, "api process shipment: make process shipment request and unmarshal: response error: reply got error:")
 
 	// Successful case
 	exampleShipment := &models.Shipment{
 		FromAndTo: models.FromAndTo{
 			FromAddress: models.Address{
-				StreetLines:         []string{"1517 Lincoln Blvd"},
-				City:                "Santa Monica",
-				StateOrProvinceCode: "CA",
-				PostalCode:          "90401",
+				StreetLines:         []string{"83 Parmenter Rd"},
+				City:                "Oakham",
+				StateOrProvinceCode: "MA",
+				PostalCode:          "01068",
 				CountryCode:         "US",
 			},
 			ToAddress: models.Address{
@@ -259,9 +329,12 @@ func TestShipGround(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	fmt.Println("CHECK")
 	if reply.Error() != nil {
 		t.Fatal("reply should not have failed")
 	}
+
+	t.SkipNow()
 
 	if reply.HighestSeverity != "SUCCESS" ||
 		// Basic validation
@@ -373,7 +446,7 @@ func TestShipSmartPost(t *testing.T) {
 
 func TestShipInternational(t *testing.T) {
 	var err error
-	fedex := testFedex
+	fedex := prodFedex
 
 	// Successful case
 	exampleShipment := &models.Shipment{
@@ -404,7 +477,7 @@ func TestShipInternational(t *testing.T) {
 			},
 		},
 		NotificationEmail: "dev-notifications@happyreturns.com",
-		References:        []string{"My ship ground reference - rothy's", "order number blah"},
+		// References:        []string{"My ship ground reference - rothy's", "order number blah"},
 		Commodities: []models.Commodity{
 			{
 				NumberOfPieces:       1,
@@ -429,8 +502,8 @@ func TestShipInternational(t *testing.T) {
 		},
 	}
 
-	exampleShipment.ToContact.CompanyName = "dev"
-	testShipInternational(t, testFedex, exampleShipment)
+	// exampleShipment.ToContact.CompanyName = "dev"
+	// testShipInternational(t, testFedex, exampleShipment)
 
 	// it also works with no email
 	fmt.Println("No email")
@@ -438,6 +511,7 @@ func TestShipInternational(t *testing.T) {
 	exampleShipment.ToContact.CompanyName = "no-email"
 	testShipInternational(t, fedex, exampleShipment)
 
+	// t.SkipNow()
 	// it also works when we supply a letterhead image id
 	fmt.Println("Has letterhead image id")
 	exampleShipment.LetterheadImageID = "IMAGE_3"
@@ -504,10 +578,15 @@ func testShipInternational(t *testing.T, f Fedex, shipment *models.Shipment) {
 	if reply.Error() != nil {
 		t.Fatal("reply should not have failed")
 	}
-	if reply.HighestSeverity != "NOTE" ||
+	if (reply.HighestSeverity != "NOTE" && reply.HighestSeverity != "SUCCESS") ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type != "OUTBOUND_LABEL" ||
 		reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType != "PDF" ||
 		reply.CompletedShipmentDetail.ShipmentDocuments[0].Type != "COMMERCIAL_INVOICE" {
+		fmt.Println(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.ImageType)
+		fmt.Println(reply.CompletedShipmentDetail.ShipmentDocuments[0].Type)
+		fmt.Println(reply.HighestSeverity)
+		fmt.Println(reply.CompletedShipmentDetail.CompletedPackageDetails.Label.Type)
+
 		t.Fatal("shipment international output not correct")
 	}
 

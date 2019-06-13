@@ -25,7 +25,29 @@ type CreatePickupResponseEnvelope struct {
 }
 
 func (c *CreatePickupResponseEnvelope) Error() error {
-	return c.Reply.Error()
+	err := c.Reply.Error()
+
+	// switch e := err.(type) {
+	// case nil:
+	// 	log.WithFields(log.Fields{
+	// 		"pickupConfirmationNumber": reply.PickupConfirmationNumber,
+	// 		"delay":                    delay,
+	// 		"streetLines":              pickup.PickupLocation.Address.StreetLines,
+	// 	}).Info("made pickup")
+	// 	break
+	// case models.ReplyError:
+	// 	if  {
+	// 		log.WithFields(log.Fields{
+	// 			"pickupConfirmationNumber": reply.PickupConfirmationNumber,
+	// 			"delay":                    delay,
+	// 			"streetLines":              pickup.PickupLocation.Address.StreetLines,
+	// 		}).Info("made pickup")
+	// 		break
+	// 	}
+	// 		fallthrough
+	// 	}
+
+	return err
 }
 
 // CreatePickupReply : CreatePickup reply root (`xml:"Body>CreatePickupReply"`)
