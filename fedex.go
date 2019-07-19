@@ -56,10 +56,11 @@ func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.PickupSuccess, error
 	for delay := 0; delay <= 5; delay++ {
 		fields := log.Fields{"pickup": pickup}
 
+		// Calculate pickup window, but just try the next window in case of error
 		window, err := pickupTimeWindow(pickup.PickupLocation.Address, delay)
 		if err != nil {
 			log.WithFields(fields).Error("calculate pickup time", err)
-			return nil, fmt.Errorf("calculate pickup time: %s", err)
+			continue
 		}
 		fields["window"] = window
 
