@@ -32,11 +32,22 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 	// Post XML
 	content, err := postXML(a.FedExURL+url, string(reqXML))
 	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"url":     url,
+			"request": string(reqXML),
+			"err":     err,
+		}).Error("error-posting-xml")
 		return fmt.Errorf("post xml: %s", err)
 	}
 
 	// Parse response
 	if err := xml.Unmarshal(content, response); err != nil {
+		logger.WithFields(logrus.Fields{
+			"url":      url,
+			"request":  string(reqXML),
+			"response": string(content),
+			"err":      err,
+		}).Error("error-parsing-xml")
 		return fmt.Errorf("parse xml: %s", err)
 	}
 
@@ -47,7 +58,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 			"request":  string(reqXML),
 			"response": string(content),
 			"err":      err,
-		}).Error("receive-error-response")
+		}).Error("error-response")
 		return fmt.Errorf("response error: %s", err)
 	}
 
