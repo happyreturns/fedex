@@ -7,13 +7,21 @@ import (
 )
 
 func (a API) TrackByNumber(carrierCode, trackingNo string) (*models.TrackReply, error) {
+	fmt.Printf("*** TrackByNumber, carrierCode: %+v\n", carrierCode)
+	fmt.Printf("*** TrackByNumber, trackingNo: %+v\n", trackingNo)
+
 	request := a.trackByNumberRequest(carrierCode, trackingNo)
+	fmt.Printf("*** TrackByNumber, request: %+v\n", request)
+
 	response := &models.TrackResponseEnvelope{}
+	fmt.Printf("*** TrackByNumber, response: %+v\n", response)
 
 	err := a.makeRequestAndUnmarshalResponse("/trck", request, response)
 	if err != nil {
+		fmt.Printf("*** TrackByNumber, err: %+v\n", err)
 		return nil, fmt.Errorf("make track request and unmarshal: %s", err)
 	}
+	fmt.Printf("*** TrackByNumber, &response.Reply: %+v\n", &response.Reply)
 	return &response.Reply, nil
 }
 
