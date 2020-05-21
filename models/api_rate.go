@@ -10,7 +10,7 @@ import (
 type Rate struct {
 	FromAndTo
 
-	// Only used for international ground shipments
+	Service     string
 	Commodities Commodities
 }
 

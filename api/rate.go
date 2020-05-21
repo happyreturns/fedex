@@ -33,6 +33,18 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 		serviceType = "INTERNATIONAL_ECONOMY"
 	}
 
+	// Set the weight to some default value, but if the commodities
+	switch r.ServiceType() {
+	case "SMART_POST":
+		return Weight{Units: "LB", Value: 0.99}
+	default:
+		return Weight{Units: "LB", Value: 13}
+	}
+
+	if rate.Commodities != nil && !rate.Commodities.Weight().IsZero() {
+		weight = rate.Commodities.Weight()
+	}
+
 	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: fmt.Sprintf("http://fedex.com/ws/rate/%s", rateVersion),
@@ -90,10 +102,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 						{
 							SequenceNumber:    1,
 							GroupPackageCount: 1,
-							Weight: models.Weight{
-								Units: "LB",
-								Value: 40,
-							},
+							Weight:            weight,
 							Dimensions: models.Dimensions{
 								Length: 5,
 								Width:  5,

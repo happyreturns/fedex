@@ -29,7 +29,7 @@ func init() {
 	nonAlphanumericRegex = regexp.MustCompile("[^a-zA-Z0-9]+")
 }
 
-func (s *Shipment) ServiceType() string {
+func ServiceType(fromAndTo FromAndTo, service string) string {
 	// TODO This is confusing. If the service is marked as "fedex_smart_post" or
 	// "fedex_international_economy" (this is done through the CMS), then
 	// explicitly set the service type as "SMART_POST" or "INTERNATIONAL_ECONOMY"
@@ -127,7 +127,9 @@ func (s *Shipment) DropoffType() string {
 
 func (s *Shipment) Weight() Weight {
 	commoditiesWeight := s.Commodities.Weight()
-	if !commoditiesWeight.IsZero() && s.IsInternational() {
+	// TODO ask if this is the intended behavior.
+	// So for getting rates, we sup
+	if !commoditiesWeight.IsZero() {
 		return commoditiesWeight
 	}
 
