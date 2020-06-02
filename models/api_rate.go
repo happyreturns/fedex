@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -12,6 +13,25 @@ type Rate struct {
 
 	Service     string
 	Commodities Commodities
+}
+
+func (r *Rate) ServiceType() string {
+	return ServiceType(r.FromAndTo, r.Service)
+}
+
+func (r *Rate) Weight() Weight {
+	commoditiesWeight := r.Commodities.Weight()
+	if !commoditiesWeight.IsZero() {
+		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
+		return commoditiesWeight
+	}
+
+	switch r.ServiceType() {
+	case "SMART_POST":
+		return Weight{Units: "LB", Value: 0.99}
+	default:
+		return Weight{Units: "LB", Value: 13}
+	}
 }
 
 type RateBody struct {

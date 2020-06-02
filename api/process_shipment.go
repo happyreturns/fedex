@@ -32,6 +32,8 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 	}
 
 	packageCount := 1
+	serviceType := shipment.ServiceType()
+
 	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: fmt.Sprintf("http://fedex.com/ws/ship/%s", processShipmentVersion),
@@ -76,7 +78,7 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 							},
 						},
 					},
-					SmartPostDetail:               a.SmartPostDetail(shipment),
+					SmartPostDetail:               a.SmartPostDetail(serviceType),
 					SpecialServicesRequested:      shipment.SpecialServicesRequested(),
 					CustomsClearanceDetail:        customsClearanceDetail,
 					LabelSpecification:            shipment.LabelSpecification(),
@@ -89,8 +91,8 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 	}, nil
 }
 
-func (a API) SmartPostDetail(shipment *models.Shipment) *models.SmartPostDetail {
-	if shipment.ServiceType() == "SMART_POST" {
+func (a API) SmartPostDetail(serviceType string) *models.SmartPostDetail {
+	if serviceType == "SMART_POST" {
 		return &models.SmartPostDetail{
 			Indicia:              "PARCEL_RETURN",
 			AncillaryEndorsement: "ADDRESS_CORRECTION",

@@ -26,23 +26,17 @@ func (a API) Rate(rate *models.Rate) (*models.RateReply, error) {
 }
 
 func (a API) rateRequest(rate *models.Rate) *models.Envelope {
-	rateRequestTypes := "LIST"
+	rateRequestTypes := "PREFERRED"
 	packageCount := 1
-	serviceType := "FEDEX_GROUND"
-	if rate.FromAddress.ShipsOutWithInternationalEconomy() {
-		serviceType = "INTERNATIONAL_ECONOMY"
-	}
 
-	// Set the weight to some default value, but if the commodities
-	switch r.ServiceType() {
-	case "SMART_POST":
-		return Weight{Units: "LB", Value: 0.99}
-	default:
-		return Weight{Units: "LB", Value: 13}
-	}
-
-	if rate.Commodities != nil && !rate.Commodities.Weight().IsZero() {
-		weight = rate.Commodities.Weight()
+	// When the service type is smartpost, getting rates from FedEx API doesn't
+	// work
+	serviceType := rate.ServiceType()
+	serviceTypeInRequest := serviceType
+	if serviceType == "SMART_POST" {
+		// TODO figure out why this is necessary. We aren't getting back smartpost
+		// rates. So using ground instead here.
+		serviceTypeInRequest = "FEDEX_GROUND"
 	}
 
 	return &models.Envelope{
@@ -70,10 +64,11 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 					},
 				},
 				RequestedShipment: models.RequestedShipment{
-					ShipTimestamp: models.Timestamp(time.Now()),
-					DropoffType:   "REGULAR_PICKUP",
-					ServiceType:   serviceType,
-					PackagingType: "YOUR_PACKAGING",
+					ShipTimestamp:     models.Timestamp(time.Now()),
+					DropoffType:       "REGULAR_PICKUP",
+					ServiceType:       serviceTypeInRequest,
+					PackagingType:     "YOUR_PACKAGING",
+					PreferredCurrency: "USD",
 					Shipper: models.Shipper{
 						AccountNumber: a.Account,
 						Address:       rate.FromAndTo.FromAddress,
@@ -92,6 +87,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 							},
 						},
 					},
+					SmartPostDetail: a.SmartPostDetail(serviceType),
 					LabelSpecification: &models.LabelSpecification{
 						LabelFormatType: "COMMON2D",
 						ImageType:       "PDF",
@@ -102,7 +98,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 						{
 							SequenceNumber:    1,
 							GroupPackageCount: 1,
-							Weight:            weight,
+							Weight:            rate.Weight(),
 							Dimensions: models.Dimensions{
 								Length: 5,
 								Width:  5,

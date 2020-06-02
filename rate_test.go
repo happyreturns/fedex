@@ -25,8 +25,13 @@ func TestFedexRate(t *testing.T) {
 				getRate: exampleInternationalRate,
 			},
 			{
-				name:    "domestic-ground",
+				name:    "domestic-ground-test",
 				fedex:   testFedex,
+				getRate: exampleDomesticRate,
+			},
+			{
+				name:    "domestic-ground-prod",
+				fedex:   prodFedex,
 				getRate: exampleDomesticRate,
 			},
 			{
@@ -58,7 +63,7 @@ func TestFedexRate(t *testing.T) {
 				heavyReply, err := testCase.fedex.Rate(heavyRequest)
 				g.Expect(err).NotTo(HaveOccurred())
 
-				// Verify rate for the heavier request is much greater (at least 5 times
+				// Verify rate for the heavier request is much greater (at least 2 times
 				// more expensive) than the rate for the light request
 				lightCost, err := lightReply.TotalCost()
 				g.Expect(err).NotTo(HaveOccurred())

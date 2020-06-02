@@ -13,8 +13,6 @@ import (
 	"github.com/happyreturns/fedex/models"
 )
 
-// TODO I'd like to use subtests here to make these more readable
-
 var (
 	testFedex             Fedex
 	prodFedex             Fedex

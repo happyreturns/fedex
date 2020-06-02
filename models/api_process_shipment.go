@@ -29,26 +29,8 @@ func init() {
 	nonAlphanumericRegex = regexp.MustCompile("[^a-zA-Z0-9]+")
 }
 
-func ServiceType(fromAndTo FromAndTo, service string) string {
-	// TODO This is confusing. If the service is marked as "fedex_smart_post" or
-	// "fedex_international_economy" (this is done through the CMS), then
-	// explicitly set the service type as "SMART_POST" or "INTERNATIONAL_ECONOMY"
-	// respectively. Otherwise, we deduce the service type based on whether
-	// the service was "return", whether the return is international, and where
-	// the return is coming from. In the future, we should just not allow using
-	// anything other than "fedex_smart_post", "fedex_international_economy",
-	// "fedex_ground" and make the CMS user to be explicit. However currently
-	// there are many shipping methods that depend on this deduction logic.
-	switch {
-	case s.Service == "fedex_smart_post",
-		s.Service == "return" && !s.IsInternational():
-		return "SMART_POST"
-	case s.Service == "fedex_international_economy" ||
-		(s.IsInternational() && s.FromAddress.ShipsOutWithInternationalEconomy()):
-		return "INTERNATIONAL_ECONOMY"
-	default:
-		return "FEDEX_GROUND"
-	}
+func (s *Shipment) ServiceType() string {
+	return ServiceType(s.FromAndTo, s.Service)
 }
 
 func (s *Shipment) Broker() string {
@@ -70,7 +52,8 @@ func (s *Shipment) ShipTime() time.Time {
 }
 
 func (s *Shipment) ShippingDocumentSpecification() *ShippingDocumentSpecification {
-	if s.ServiceType() == "SMART_POST" || !s.IsInternational() {
+	serviceType := ServiceType(s.FromAndTo, s.Service)
+	if serviceType == "SMART_POST" || !s.IsInternational() {
 		return nil
 	}
 
@@ -127,9 +110,7 @@ func (s *Shipment) DropoffType() string {
 
 func (s *Shipment) Weight() Weight {
 	commoditiesWeight := s.Commodities.Weight()
-	// TODO ask if this is the intended behavior.
-	// So for getting rates, we sup
-	if !commoditiesWeight.IsZero() {
+	if !commoditiesWeight.IsZero() && s.IsInternational() {
 		return commoditiesWeight
 	}
 
