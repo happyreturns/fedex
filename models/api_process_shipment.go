@@ -52,8 +52,7 @@ func (s *Shipment) ShipTime() time.Time {
 }
 
 func (s *Shipment) ShippingDocumentSpecification() *ShippingDocumentSpecification {
-	serviceType := ServiceType(s.FromAndTo, s.Service)
-	if serviceType == "SMART_POST" || !s.IsInternational() {
+	if s.ServiceType() == "SMART_POST" || !s.IsInternational() {
 		return nil
 	}
 
