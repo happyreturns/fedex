@@ -58,7 +58,7 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 				RequestedShipment: models.RequestedShipment{
 					ShipTimestamp: models.Timestamp(shipment.ShipTime()),
 					DropoffType:   shipment.DropoffType(),
-					ServiceType:   shipment.ServiceType(),
+					ServiceType:   serviceType,
 					PackagingType: "YOUR_PACKAGING",
 					Shipper: models.Shipper{
 						AccountNumber: a.Account,
