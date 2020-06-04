@@ -34,8 +34,10 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 	serviceType := rate.ServiceType()
 	serviceTypeInRequest := serviceType
 	if serviceType == "SMART_POST" {
-		// TODO figure out why this is necessary. We aren't getting back smartpost
-		// rates. So using ground instead here.
+		// This is necessary. We can't get back smartpost rates. So using ground
+		// instead here.
+		// Per Page 239 of the Dev Guide: "Estimated shipping rates are not
+		// available for SmartPost Returns"
 		serviceTypeInRequest = "FEDEX_GROUND"
 	}
 
@@ -87,7 +89,8 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 							},
 						},
 					},
-					SmartPostDetail: a.SmartPostDetail(serviceType),
+					SpecialServicesRequested: rate.SpecialServicesRequested(),
+					SmartPostDetail:          a.SmartPostDetail(serviceType),
 					LabelSpecification: &models.LabelSpecification{
 						LabelFormatType: "COMMON2D",
 						ImageType:       "PDF",

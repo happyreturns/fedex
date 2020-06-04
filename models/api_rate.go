@@ -19,6 +19,41 @@ func (r *Rate) ServiceType() string {
 	return ServiceType(r.FromAndTo, r.Service)
 }
 
+func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
+	var (
+		specialServiceTypes []string
+
+		etdDetail               *EtdDetail
+		eventNotificationDetail *EventNotificationDetail
+		returnShipmentDetail    *ReturnShipmentDetail
+	)
+
+	if r.ServiceType() == "SMART_POST" {
+		specialServiceTypes = append(specialServiceTypes, "RETURN_SHIPMENT")
+		returnShipmentDetail = &ReturnShipmentDetail{
+			ReturnType: "PRINT_RETURN_LABEL",
+		}
+	}
+
+	if r.IsInternational() {
+		specialServiceTypes = append(specialServiceTypes, "ELECTRONIC_TRADE_DOCUMENTS")
+		etdDetail = &EtdDetail{
+			RequestedDocumentCopies: "COMMERCIAL_INVOICE",
+		}
+	}
+
+	if len(specialServiceTypes) == 0 {
+		return nil
+	}
+	return &SpecialServicesRequested{
+		SpecialServiceTypes: specialServiceTypes,
+
+		EtdDetail:               etdDetail,
+		EventNotificationDetail: eventNotificationDetail,
+		ReturnShipmentDetail:    returnShipmentDetail,
+	}
+}
+
 func (r *Rate) Weight() Weight {
 	commoditiesWeight := r.Commodities.Weight()
 	if !commoditiesWeight.IsZero() {
