@@ -57,16 +57,16 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 func (r *Rate) Weight() Weight {
 	commoditiesWeight := r.Commodities.Weight()
 	if !commoditiesWeight.IsZero() {
+		// Assume the weight must be between than 13 and 150 lbs.
+		// If the weight is less than 13 lbs, assume a weight of 13 lbs, which is
+		// heavy enough that the destination will matter when choosing between two
+		// fedex ground rates
 		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
+		commoditiesWeight.Value = math.Max(commoditiesWeight.Value, 13.0)
 		return commoditiesWeight
 	}
 
-	switch r.ServiceType() {
-	case "SMART_POST":
-		return Weight{Units: "LB", Value: 0.99}
-	default:
-		return Weight{Units: "LB", Value: 13}
-	}
+	return Weight{Units: "LB", Value: 13}
 }
 
 type RateBody struct {

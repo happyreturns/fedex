@@ -40,6 +40,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 		// available for SmartPost Returns"
 		serviceTypeInRequest = "FEDEX_GROUND"
 	}
+	weight := rate.Weight()
 
 	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
@@ -101,7 +102,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 						{
 							SequenceNumber:    1,
 							GroupPackageCount: 1,
-							Weight:            rate.Weight(),
+							Weight:            weight,
 							Dimensions: models.Dimensions{
 								Length: 5,
 								Width:  5,
