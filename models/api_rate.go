@@ -104,11 +104,19 @@ func (rr *RateReply) TotalCost() (Charge, error) {
 }
 
 func (rr *RateReply) firstRatedShipmentDetails() (RateDetail, error) {
-	// TODO We find the first RatedshipmentDetail for figuring out the cost of
-	// the total shipment, taxes, etc. There can be other RatedshipmentDetails (
-	// From what I can tell online, the ones RateType equal to
-	// `PAYOR_ACCOUNT_PACKAGE` or `PAYOR_ACCOUNT_SHIPMENT` are the ones we should
-	// pay attention.
+
+	// Find the rated shipment detail of type "PREFERRED_ACCOUNT_PACKAGE"
+	for _, rateReplyDetail := range rr.RateReplyDetails {
+		for _, ratedShipmentDetail := range rateReplyDetail.RatedShipmentDetails {
+			if ratedShipmentDetail.ShipmentRateDetail.RateType == "PREFERRED_ACCOUNT_PACKAGE" {
+				return ratedShipmentDetail.ShipmentRateDetail, nil
+			}
+		}
+	}
+
+	// We prefer the rated shipment detail of type "PREFERRED_ACCOUNT_PACKAGE",
+	// but if that isn't found, return the rated shipment detail with RateType
+	// equal to `PAYOR_ACCOUNT_PACKAGE` or `PAYOR_ACCOUNT_SHIPMENT`
 	for _, rateReplyDetail := range rr.RateReplyDetails {
 		for _, ratedShipmentDetail := range rateReplyDetail.RatedShipmentDetails {
 			if strings.HasPrefix(ratedShipmentDetail.ShipmentRateDetail.RateType, "PAYOR_") {
@@ -117,5 +125,5 @@ func (rr *RateReply) firstRatedShipmentDetails() (RateDetail, error) {
 		}
 	}
 
-	return RateDetail{}, errors.New("no RatedShipmentDetails with PAYOR_ prefix found")
+	return RateDetail{}, errors.New("no RatedShipmentDetails with PREFERRED_ACCOUNT_PACKAGE or PAYOR_ prefix found")
 }
