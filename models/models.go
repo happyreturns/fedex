@@ -228,7 +228,7 @@ type Dimensions struct {
 
 func (d Dimensions) IsValid() bool {
 	valuesAreValid := d.Length > 0 && d.Width > 0 && d.Height > 0
-	unitsIsValid := d.Units == "IN" || d.Units == "CM"
+	unitsIsValid := d.Units == DimensionsUnitsIn || d.Units == DimensionsUnitsCm
 
 	return valuesAreValid && unitsIsValid
 }
