@@ -59,7 +59,7 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 					ShipTimestamp: models.Timestamp(shipment.ShipTime()),
 					DropoffType:   shipment.DropoffType(),
 					ServiceType:   serviceType,
-					PackagingType: "YOUR_PACKAGING",
+					PackagingType: models.PackagingTypeYourPackaging,
 					Shipper: models.Shipper{
 						AccountNumber: a.Account,
 						Address:       shipment.FromAddress,
@@ -71,7 +71,7 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 						Contact:       shipment.ToContact,
 					},
 					ShippingChargesPayment: &models.Payment{
-						PaymentType: "SENDER",
+						PaymentType: models.PaymentTypeSender,
 						Payor: models.Payor{
 							ResponsibleParty: models.Shipper{
 								AccountNumber: a.Account,
@@ -92,10 +92,10 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 }
 
 func (a API) SmartPostDetail(serviceType string) *models.SmartPostDetail {
-	if serviceType == "SMART_POST" {
+	if serviceType == models.ServiceTypeSmartPost {
 		return &models.SmartPostDetail{
-			Indicia:              "PARCEL_RETURN",
-			AncillaryEndorsement: "ADDRESS_CORRECTION",
+			Indicia:              models.IndiciaParcelReturn,
+			AncillaryEndorsement: models.AncillaryEndorsementAddressCorrection,
 			HubID:                a.HubID,
 		}
 	}
@@ -127,7 +127,7 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 		},
 	}
 	dutiesPayment := models.Payment{
-		PaymentType: "RECIPIENT",
+		PaymentType: models.PaymentTypeRecipient,
 		Payor: models.Payor{
 			ResponsibleParty: importerOfRecord,
 		},
@@ -135,7 +135,7 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 
 	return &models.CustomsClearanceDetail{
 		Brokers: []models.Broker{{
-			Type: "IMPORT",
+			Type: models.BrokerTypeImport,
 			Broker: models.Shipper{
 				AccountNumber: a.Account,
 				Contact: models.Contact{
@@ -149,7 +149,7 @@ func (a API) customsClearanceDetail(shipment *models.Shipment) (*models.CustomsC
 		Commodities:                    shipment.Commodities,
 		PartiesToTransactionAreRelated: false,
 		CommercialInvoice: &models.CommercialInvoice{
-			Purpose:        "REPAIR_AND_RETURN",
+			Purpose:        models.CommercialInvoicePurposeRepairAndReturn,
 			OriginatorName: shipment.OriginatorName,
 		},
 	}, nil

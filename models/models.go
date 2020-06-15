@@ -279,13 +279,6 @@ type EventNotificationDetail struct {
 	EventNotifications []EventNotification `xml:"q0:EventNotifications"`
 }
 
-// type EventNotificationDetailTracking struct {
-// 	Role                string              `xml:"q0:Role"`
-// 	Events              []string            `xml:"q0:Events"`
-// 	NotificationDetail  NotificationDetail  `xml:"q0:NotificationDetail"`
-// 	FormatSpecification FormatSpecification `xml:"q0:FormatSpecification"`
-// }
-
 type Format struct {
 	ImageType string `xml:"q0:ImageType"`
 	StockType string `xml:"q0:StockType"`

@@ -6,7 +6,7 @@ package models
 func ServiceType(fromAndTo FromAndTo, service string) string {
 	// TODO This is confusing. If the service is marked as "fedex_smart_post" or
 	// "fedex_international_economy" (this is done through the CMS), then
-	// explicitly set the service type as "SMART_POST" or "INTERNATIONAL_ECONOMY"
+	// explicitly set the service type as SmartPost or InternationalEconomy
 	// respectively. Otherwise, we deduce the service type based on whether
 	// the service was "return", whether the return is international, and where
 	// the return is coming from. In the future, we should just not allow using
@@ -19,11 +19,11 @@ func ServiceType(fromAndTo FromAndTo, service string) string {
 	switch {
 	case service == "fedex_smart_post",
 		service == "return" && !isInternational:
-		return "SMART_POST"
+		return ServiceTypeSmartPost
 	case service == "fedex_international_economy" ||
 		(isInternational && shipsOutWithInternationalEconomy):
-		return "INTERNATIONAL_ECONOMY"
+		return ServiceTypeInternationalEconomy
 	default:
-		return "FEDEX_GROUND"
+		return ServiceTypeFedexGround
 	}
 }

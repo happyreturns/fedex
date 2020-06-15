@@ -16,7 +16,15 @@ type Rate struct {
 }
 
 func (r *Rate) ServiceType() string {
-	return ServiceType(r.FromAndTo, r.Service)
+	serviceType := ServiceType(r.FromAndTo, r.Service)
+	if serviceType == ServiceTypeSmartPost {
+		// This is necessary. We can't get back smartpost rates. So using ground
+		// instead here.
+		// Per Page 239 of the Dev Guide: "Estimated shipping rates are not
+		// available for SmartPost Returns"
+		serviceType = ServiceTypeFedexGround
+	}
+	return serviceType
 }
 
 func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
@@ -28,17 +36,17 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 		returnShipmentDetail    *ReturnShipmentDetail
 	)
 
-	if r.ServiceType() == "SMART_POST" {
-		specialServiceTypes = append(specialServiceTypes, "RETURN_SHIPMENT")
+	if r.ServiceType() == ServiceTypeSmartPost {
+		specialServiceTypes = append(specialServiceTypes, SpecialServiceTypeReturnShipment)
 		returnShipmentDetail = &ReturnShipmentDetail{
-			ReturnType: "PRINT_RETURN_LABEL",
+			ReturnType: ReturnTypePrintReturnLabel,
 		}
 	}
 
 	if r.IsInternational() {
-		specialServiceTypes = append(specialServiceTypes, "ELECTRONIC_TRADE_DOCUMENTS")
+		specialServiceTypes = append(specialServiceTypes, SpecialServiceTypeElectronicTradeDocuments)
 		etdDetail = &EtdDetail{
-			RequestedDocumentCopies: "COMMERCIAL_INVOICE",
+			RequestedDocumentCopies: DocumentTypeCommercialInvoice,
 		}
 	}
 
@@ -66,7 +74,7 @@ func (r *Rate) Weight() Weight {
 		return commoditiesWeight
 	}
 
-	return Weight{Units: "LB", Value: 13}
+	return Weight{Units: WeightUnitsLB, Value: 13}
 }
 
 type RateBody struct {
@@ -108,7 +116,7 @@ func (rr *RateReply) firstRatedShipmentDetails() (RateDetail, error) {
 	// Find the rated shipment detail of type "PREFERRED_ACCOUNT_PACKAGE"
 	for _, rateReplyDetail := range rr.RateReplyDetails {
 		for _, ratedShipmentDetail := range rateReplyDetail.RatedShipmentDetails {
-			if ratedShipmentDetail.ShipmentRateDetail.RateType == "PREFERRED_ACCOUNT_PACKAGE" {
+			if ratedShipmentDetail.ShipmentRateDetail.RateType == RateTypePreferredAccountPackage {
 				return ratedShipmentDetail.ShipmentRateDetail, nil
 			}
 		}
@@ -125,5 +133,5 @@ func (rr *RateReply) firstRatedShipmentDetails() (RateDetail, error) {
 		}
 	}
 
-	return RateDetail{}, errors.New("no RatedShipmentDetails with PREFERRED_ACCOUNT_PACKAGE or PAYOR_ prefix found")
+	return RateDetail{}, errors.New("no RatedShipmentDetails found")
 }

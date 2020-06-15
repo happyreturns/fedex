@@ -26,20 +26,12 @@ func (a API) Rate(rate *models.Rate) (*models.RateReply, error) {
 }
 
 func (a API) rateRequest(rate *models.Rate) *models.Envelope {
-	rateRequestTypes := "PREFERRED"
+	rateRequestTypes := models.RequestTypePreferred
 	packageCount := 1
 
 	// When the service type is smartpost, getting rates from FedEx API doesn't
 	// work
 	serviceType := rate.ServiceType()
-	serviceTypeInRequest := serviceType
-	if serviceType == "SMART_POST" {
-		// This is necessary. We can't get back smartpost rates. So using ground
-		// instead here.
-		// Per Page 239 of the Dev Guide: "Estimated shipping rates are not
-		// available for SmartPost Returns"
-		serviceTypeInRequest = "FEDEX_GROUND"
-	}
 	weight := rate.Weight()
 
 	return &models.Envelope{
@@ -68,10 +60,10 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 				},
 				RequestedShipment: models.RequestedShipment{
 					ShipTimestamp:     models.Timestamp(time.Now()),
-					DropoffType:       "REGULAR_PICKUP",
-					ServiceType:       serviceTypeInRequest,
-					PackagingType:     "YOUR_PACKAGING",
-					PreferredCurrency: "USD",
+					DropoffType:       models.DropoffTypeRegularPickup,
+					ServiceType:       serviceType,
+					PackagingType:     models.PackagingTypeYourPackaging,
+					PreferredCurrency: models.PreferredCurrencyUSD,
 					Shipper: models.Shipper{
 						AccountNumber: a.Account,
 						Address:       rate.FromAndTo.FromAddress,
@@ -83,7 +75,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 						Contact:       rate.FromAndTo.ToContact,
 					},
 					ShippingChargesPayment: &models.Payment{
-						PaymentType: "SENDER",
+						PaymentType: models.PaymentTypeSender,
 						Payor: models.Payor{
 							ResponsibleParty: models.Shipper{
 								AccountNumber: a.Account,
@@ -93,8 +85,8 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 					SpecialServicesRequested: rate.SpecialServicesRequested(),
 					SmartPostDetail:          a.SmartPostDetail(serviceType),
 					LabelSpecification: &models.LabelSpecification{
-						LabelFormatType: "COMMON2D",
-						ImageType:       "PDF",
+						LabelFormatType: models.LabelFormatTypeCommon2D,
+						ImageType:       models.ImageTypePDF,
 					},
 					RateRequestTypes: &rateRequestTypes,
 					PackageCount:     &packageCount,
@@ -107,14 +99,14 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 								Length: 5,
 								Width:  5,
 								Height: 5,
-								Units:  "IN",
+								Units:  models.DimensionsUnitsIn,
 							},
-							PhysicalPackaging: "BAG",
+							PhysicalPackaging: models.PackagingBag,
 							ItemDescription:   "Stuff",
 							CustomerReferences: []models.CustomerReference{
 								{
-									CustomerReferenceType: "CUSTOMER_REFERENCE",
-									Value:                 "NAFTA_COO",
+									CustomerReferenceType: models.CustomerReferenceTypeCustomerReference,
+									Value:                 models.CustomerReferenceValueNaftaCoo,
 								},
 							},
 						},
