@@ -15,6 +15,7 @@ type Shipment struct {
 	Service           string
 	Dimensions        Dimensions
 	InvoiceNumber     string
+	RMANumber         string
 
 	// Only used for international ground shipments
 	OriginatorName    string
@@ -182,19 +183,11 @@ func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
 func (s *Shipment) CustomerReferences() []CustomerReference {
 	customerReferences := make([]CustomerReference, len(s.References))
 	for idx, reference := range s.References {
-		switch s.ServiceType() {
-		case ServiceTypeSmartPost:
-			customerReferences[idx] = CustomerReference{
-				CustomerReferenceType: CustomerReferenceTypeRMAAssociation,
-				Value:                 sanitizeReferenceForFedexAPI(reference),
-			}
-		default:
 			customerReferences[idx] = CustomerReference{
 				CustomerReferenceType: CustomerReferenceTypeCustomerReference,
 				Value:                 sanitizeReferenceForFedexAPI(reference),
 			}
 		}
-	}
 
 	if s.InvoiceNumber != "" {
 		customerReferences = append(customerReferences, CustomerReference{
@@ -202,6 +195,14 @@ func (s *Shipment) CustomerReferences() []CustomerReference {
 			Value:                 s.InvoiceNumber,
 		})
 	}
+
+	if s.RMANumber != "" {
+		customerReferences = append(customerReferences, CustomerReference{
+			CustomerReferenceType: CustomerReferenceTypeRMAAssociation,
+			Value:                 sanitizeReferenceForFedexAPI(s.RMANumber),
+		})
+	}
+
 	return customerReferences
 }
 
