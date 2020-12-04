@@ -13,9 +13,11 @@ type Shipment struct {
 	NotificationEmail string
 	References        []string
 	Service           string
-	Dimensions        Dimensions
-	InvoiceNumber     string
-	RMANumber         string
+	// MethodServiceLevel preserves the original shipping method service level, as Service is overwritten.
+	MethodServiceLevel string
+	Dimensions         Dimensions
+	InvoiceNumber      string
+	RMANumber          string
 
 	// Only used for international ground shipments
 	OriginatorName    string
@@ -149,7 +151,7 @@ func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
 		returnShipmentDetail    *ReturnShipmentDetail
 	)
 
-	if s.ServiceType() == ServiceTypeSmartPost {
+	if s.ServiceType() == ServiceTypeSmartPost || s.MethodServiceLevel == "fedex_ground_return" {
 		specialServiceTypes = append(specialServiceTypes, SpecialServiceTypeReturnShipment)
 		returnShipmentDetail = &ReturnShipmentDetail{
 			ReturnType: ReturnTypePrintReturnLabel,
@@ -183,11 +185,11 @@ func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
 func (s *Shipment) CustomerReferences() []CustomerReference {
 	customerReferences := make([]CustomerReference, len(s.References))
 	for idx, reference := range s.References {
-			customerReferences[idx] = CustomerReference{
-				CustomerReferenceType: CustomerReferenceTypeCustomerReference,
-				Value:                 sanitizeReferenceForFedexAPI(reference),
-			}
+		customerReferences[idx] = CustomerReference{
+			CustomerReferenceType: CustomerReferenceTypeCustomerReference,
+			Value:                 sanitizeReferenceForFedexAPI(reference),
 		}
+	}
 
 	if s.InvoiceNumber != "" {
 		customerReferences = append(customerReferences, CustomerReference{
