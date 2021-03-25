@@ -12,6 +12,7 @@ const (
 	CustomerImageUsageTypeSignature  = "SIGNATURE"
 
 	CustomerReferenceTypeCustomerReference = "CUSTOMER_REFERENCE"
+	CustomerReferenceTypePurchaseOrder     = "P_O_NUMBER"
 	CustomerReferenceTypeRMAAssociation    = "RMA_ASSOCIATION"
 	CustomerReferenceTypeInvoice           = "INVOICE_NUMBER"
 	CustomerReferenceValueNaftaCoo         = "NAFTA_COO"

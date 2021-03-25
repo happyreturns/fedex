@@ -184,10 +184,34 @@ func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
 
 func (s *Shipment) CustomerReferences() []CustomerReference {
 	customerReferences := make([]CustomerReference, len(s.References))
+
+	// HR-4683 Bug Fix
+	// The references passed in through the ShipmentRequest to the shipping
+	// service that eventually make it through to this function included
+	// two values, the "retailerName", and "orderNumber". The duplicated
+	// keys for the CustomerReferenceTypeCustomerReference type were causing
+	// billing issues because there were two values (likely causing the WSDL
+	// validation to fail), and this will now always access the first reference
+	// passed in as the customer reference, and the second reference passed in as
+	// the PO number. This is not elegant as it requires explicit indexed values,
+	// but this is somewhat regulated by the ShippingServiceReferencesFromHRReturn
+	// function in the shipping repo's conv package which will always provide the
+	// two references when called when building the shipping service client requests.
+	//
+	// TODO: Tech Debt: This should be revisited at a later time to have a more
+	// elegant solution as this is only a workaround for the present bug.
 	for idx, reference := range s.References {
-		customerReferences[idx] = CustomerReference{
-			CustomerReferenceType: CustomerReferenceTypeCustomerReference,
-			Value:                 sanitizeReferenceForFedexAPI(reference),
+		switch idx {
+		case 0: // first index would always be the retailer name
+			customerReferences[idx] = CustomerReference{
+				CustomerReferenceType: CustomerReferenceTypeCustomerReference,
+				Value:                 sanitizeReferenceForFedexAPI(reference),
+			}
+		case 1: // second index would always be the order number
+			customerReferences[idx] = CustomerReference{
+				CustomerReferenceType: CustomerReferenceTypePurchaseOrder,
+				Value:                 sanitizeReferenceForFedexAPI(reference),
+			}
 		}
 	}
 
