@@ -183,7 +183,7 @@ func (s *Shipment) SpecialServicesRequested() *SpecialServicesRequested {
 }
 
 func (s *Shipment) CustomerReferences() []CustomerReference {
-	customerReferences := make([]CustomerReference, len(s.References))
+	customerReferences := make([]CustomerReference, 0, 4)
 
 	// HR-4683 Bug Fix
 	// The references passed in through the ShipmentRequest to the shipping
@@ -203,15 +203,15 @@ func (s *Shipment) CustomerReferences() []CustomerReference {
 	for idx, reference := range s.References {
 		switch idx {
 		case 0: // first index would always be the retailer name
-			customerReferences[idx] = CustomerReference{
+			customerReferences = append(customerReferences, CustomerReference{
 				CustomerReferenceType: CustomerReferenceTypeCustomerReference,
 				Value:                 sanitizeReferenceForFedexAPI(reference),
-			}
+			})
 		case 1: // second index would always be the order number
-			customerReferences[idx] = CustomerReference{
+			customerReferences = append(customerReferences, CustomerReference{
 				CustomerReferenceType: CustomerReferenceTypePurchaseOrder,
 				Value:                 sanitizeReferenceForFedexAPI(reference),
-			}
+			})
 		}
 	}
 
