@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	processShipmentVersion = "v23"
+	processShipmentVersion = "v26"
 )
 
 func (a API) ProcessShipment(shipment *models.Shipment) (*models.ProcessShipmentReply, error) {
@@ -52,7 +52,7 @@ func (a API) processShipmentRequest(shipment *models.Shipment) (*models.Envelope
 					},
 					Version: models.Version{
 						ServiceID: "ship",
-						Major:     23,
+						Major:     26,
 					},
 				},
 				RequestedShipment: models.RequestedShipment{
