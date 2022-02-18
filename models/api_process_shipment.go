@@ -113,6 +113,7 @@ func (s *Shipment) DropoffType() string {
 
 func (s *Shipment) Weight() Weight {
 	commoditiesWeight := s.Commodities.Weight()
+
 	if !commoditiesWeight.IsZero() && s.IsInternational() {
 		// Add a little extra weight to the entire shipment weight, since adding floats
 		// in golang sometimes results in a float that is a little less than the actual
@@ -125,7 +126,7 @@ func (s *Shipment) Weight() Weight {
 	case ServiceTypeSmartPost:
 		return Weight{Units: WeightUnitsLB, Value: 0.99}
 	default:
-		return Weight{Units: WeightUnitsLB, Value: 2}
+		return Weight{Units: WeightUnitsLB, Value: commoditiesWeight.Value}
 	}
 }
 
