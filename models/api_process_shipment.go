@@ -125,7 +125,11 @@ func (s *Shipment) Weight() Weight {
 	case ServiceTypeSmartPost:
 		return Weight{Units: WeightUnitsLB, Value: 0.99}
 	default:
-		return Weight{Units: WeightUnitsLB, Value: 2}
+		value := 2.0
+		if !commoditiesWeight.IsZero() {
+			value = commoditiesWeight.Value
+		}
+		return Weight{Units: WeightUnitsLB, Value: value}
 	}
 }
 
