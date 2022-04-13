@@ -21,6 +21,7 @@ type Shipment struct {
 
 	// Only used for international ground shipments
 	OriginatorName    string
+	TotalWeight       Weight
 	Commodities       Commodities
 	LetterheadImageID string
 }
@@ -112,6 +113,10 @@ func (s *Shipment) DropoffType() string {
 }
 
 func (s *Shipment) Weight() Weight {
+	if !s.TotalWeight.IsZero() {
+		return s.TotalWeight
+	}
+
 	commoditiesWeight := s.Commodities.Weight()
 	if !commoditiesWeight.IsZero() && s.IsInternational() {
 		// Add a little extra weight to the entire shipment weight, since adding floats
