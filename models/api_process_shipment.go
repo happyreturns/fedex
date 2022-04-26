@@ -18,6 +18,7 @@ type Shipment struct {
 	Dimensions         Dimensions
 	InvoiceNumber      string
 	RMANumber          string
+	TotalWeight        Weight
 
 	// Only used for international ground shipments
 	OriginatorName    string
@@ -112,6 +113,10 @@ func (s *Shipment) DropoffType() string {
 }
 
 func (s *Shipment) Weight() Weight {
+	if !s.TotalWeight.IsZero() {
+		return s.TotalWeight
+	}
+
 	commoditiesWeight := s.Commodities.Weight()
 	if !commoditiesWeight.IsZero() && s.IsInternational() {
 		// Add a little extra weight to the entire shipment weight, since adding floats
@@ -125,7 +130,11 @@ func (s *Shipment) Weight() Weight {
 	case ServiceTypeSmartPost:
 		return Weight{Units: WeightUnitsLB, Value: 0.99}
 	default:
-		return Weight{Units: WeightUnitsLB, Value: 2}
+		value := 2.0
+		if !commoditiesWeight.IsZero() {
+			value = commoditiesWeight.Value
+		}
+		return Weight{Units: WeightUnitsLB, Value: value}
 	}
 }
 
