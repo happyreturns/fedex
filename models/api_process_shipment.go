@@ -18,10 +18,10 @@ type Shipment struct {
 	Dimensions         Dimensions
 	InvoiceNumber      string
 	RMANumber          string
+	TotalWeight        Weight
 
 	// Only used for international ground shipments
 	OriginatorName    string
-	TotalWeight       Weight
 	Commodities       Commodities
 	LetterheadImageID string
 }
