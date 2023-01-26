@@ -7,17 +7,28 @@ import (
 )
 
 func (a API) TrackByNumber(carrierCode, trackingNo string) (*models.TrackReply, error) {
-	request := a.trackByNumberRequest(carrierCode, trackingNo)
+	request := a.trackByNumberRequest(carrierCode, trackingNo, "")
 	response := &models.TrackResponseEnvelope{}
 
 	err := a.makeRequestAndUnmarshalResponse("/trck", request, response)
 	if err != nil {
-		return nil, fmt.Errorf("make track request and unmarshal: %s", err)
+		return nil, fmt.Errorf("make track request and unmarshal: %w", err)
 	}
 	return &response.Reply, nil
 }
 
-func (a API) trackByNumberRequest(carrierCode string, trackingNo string) *models.Envelope {
+func (a API) TrackByUniqueIdentifier(carrierCode, trackingNo string, trackingUniqueId string) (*models.TrackReply, error) {
+	request := a.trackByNumberRequest(carrierCode, trackingNo, trackingUniqueId)
+	response := &models.TrackResponseEnvelope{}
+
+	err := a.makeRequestAndUnmarshalResponse("/trck", request, response)
+	if err != nil {
+		return nil, fmt.Errorf("make track request and unmarshal: %w", err)
+	}
+	return &response.Reply, nil
+}
+
+func (a API) trackByNumberRequest(carrierCode string, trackingNo string, trackingUniqueId string) *models.Envelope {
 	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",
 		Namespace: "http://fedex.com/ws/track/v16",
@@ -46,6 +57,7 @@ func (a API) trackByNumberRequest(carrierCode string, trackingNo string) *models
 						Type:  "TRACKING_NUMBER_OR_DOORTAG",
 						Value: trackingNo,
 					},
+					TrackingNumberUniqueIdentifier: trackingUniqueId,
 				},
 			},
 		},

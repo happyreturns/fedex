@@ -282,7 +282,7 @@ type Event struct {
 	EventDescription           string
 	StatusExceptionCode        string
 	StatusExceptionDescription string
-	Address                    Address
+	Address                    AddressReply
 	ArrivalLocation            string
 }
 
@@ -564,8 +564,9 @@ type PickupLocation struct {
 }
 
 type SelectionDetails struct {
-	CarrierCode       string            `xml:"q0:CarrierCode"`
-	PackageIdentifier PackageIdentifier `xml:"q0:PackageIdentifier"`
+	CarrierCode                    string            `xml:"q0:CarrierCode"`
+	PackageIdentifier              PackageIdentifier `xml:"q0:PackageIdentifier"`
+	TrackingNumberUniqueIdentifier string            `xml:"q0:TrackingNumberUniqueIdentifier"`
 	// Destination           Destination
 	// ShipmentAccountNumber string
 }

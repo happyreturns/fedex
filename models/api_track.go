@@ -67,6 +67,14 @@ func (tr *TrackReply) Ship() *time.Time {
 	return tr.searchDatesOrTimes("SHIP")
 }
 
+func (tr *TrackReply) TrackDetailsCount() int {
+	count := 0
+	for _, completedTrackDetail := range tr.CompletedTrackDetails {
+		count += len(completedTrackDetail.TrackDetails)
+	}
+	return count
+}
+
 func (tr *TrackReply) Events() []Event {
 	events := []Event{}
 	for _, completedTrackDetail := range tr.CompletedTrackDetails {
