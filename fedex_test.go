@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	// "os"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -733,7 +733,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 45}
 		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
@@ -748,7 +748,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("earlier pickup", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
 		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
@@ -763,7 +763,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("pickup with day delay", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 3, Hours: 10, Minutes: 0}
 		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
@@ -780,7 +780,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("pickup time past current time", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 2, 11, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
 		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
@@ -797,7 +797,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("sunday pickup", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
 		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
@@ -808,7 +808,7 @@ func TestPickupTimeWindow(t *testing.T) {
 	t.Run("no state provided", func(t *testing.T) {
 		mockClock := clockMock.NewMockClock(ctrl)
 		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate)
+		mockClock.EXPECT().Now().Return(testDate).Times(1)
 
 		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 45}
 		pickupAddress := models.Address{StateOrProvinceCode: "no state"}
