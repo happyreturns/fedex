@@ -24,22 +24,22 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	// credData, err := ioutil.ReadFile("creds.json")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	credData, err := ioutil.ReadFile("creds.json")
+	if err != nil {
+		panic(err)
+	}
 
-	// creds := map[string]Fedex{}
-	// if err := json.Unmarshal(credData, &creds); err != nil {
-	// 	panic(err)
-	// }
+	creds := map[string]Fedex{}
+	if err := json.Unmarshal(credData, &creds); err != nil {
+		panic(err)
+	}
 
-	// testFedex = creds["test"]
-	// prodFedex = creds["prod"]
-	// laSmartPostFedex = creds["laSmartPost"]
-	// blandonSmartPostFedex = creds["blandonSmartPost"]
+	testFedex = creds["test"]
+	prodFedex = creds["prod"]
+	laSmartPostFedex = creds["laSmartPost"]
+	blandonSmartPostFedex = creds["blandonSmartPost"]
 
-	// os.Exit(m.Run())
+	os.Exit(m.Run())
 }
 
 func TestTrack(t *testing.T) {
