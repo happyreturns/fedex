@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/happyreturns/fedex/api"
+	"github.com/happyreturns/fedex/clock"
 	"github.com/happyreturns/fedex/models"
 	log "github.com/sirupsen/logrus"
 )
@@ -46,68 +47,77 @@ func init() {
 	log.SetOutput(os.Stdout)
 }
 
-// CreatePickup creates a pickup with retry logic to try pickups on the following days
+// CreatePickup creates a pickup with retry logic to try pickups on different days/times
 func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.PickupSuccess, error) {
-	var (
-		reply *models.CreatePickupReply
-		err   error
-	)
-
 	for delay := 0; delay <= 5; delay++ {
-		fields := log.Fields{"pickup": pickup}
-
-		// Calculate pickup window, but just try the next window in case of error
-		var window *models.PickupTimeWindow
-		window, err = pickupTimeWindow(pickup.PickupLocation.Address, delay)
-		if err != nil {
-			log.WithFields(fields).Error("calculate pickup time", err)
-			continue
-		}
-		fields["window"] = window
-
-		reply, err = f.API.CreatePickup(pickup, window)
-		switch err.(type) {
-		case nil:
-			fields["reply"] = reply
-			log.WithFields(fields).Info("made pickup")
-			return &models.PickupSuccess{
-				ConfirmationNumber: reply.PickupConfirmationNumber,
-				Window:             *window,
-			}, nil
-
-		case models.PickupAlreadyExistsError:
-			fields["reply"] = reply
-			log.WithFields(fields).Info("pickup already exists")
-			return &models.PickupSuccess{
-				Window: *window,
-			}, nil
-
-		default:
-			fields["err"] = err
-			log.WithFields(fields).Info("failed pickup")
+		pickupOffset := &models.PickupOffset{Days: delay, Hours: 10, Minutes: 45}
+		pickupSuccess := f.bookPickup(pickup, pickupOffset)
+		if pickupSuccess != nil {
+			return pickupSuccess, nil
 		}
 	}
 
-	return nil, fmt.Errorf("fedex create pickup: %s", err)
+	for delay := 0; delay <= 5; delay++ {
+		pickupOffset := &models.PickupOffset{Days: delay, Hours: 10, Minutes: 0}
+		pickupSuccess := f.bookPickup(pickup, pickupOffset)
+		if pickupSuccess != nil {
+			return pickupSuccess, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unable to schedule a fedex pickup")
 }
 
-func pickupTimeWindow(pickupAddress models.Address, numDaysToDelay int) (*models.PickupTimeWindow, error) {
+func (f Fedex) bookPickup(pickup *models.Pickup, pickupOffset *models.PickupOffset) *models.PickupSuccess {
+	fields := log.Fields{"pickup": pickup}
+
+	window, err := pickupTimeWindow(clock.NewClock(), pickup.PickupLocation.Address, pickupOffset)
+	if err != nil {
+		log.WithFields(fields).Error("calculate pickup time", err)
+		return nil
+	}
+	fields["window"] = window
+
+	reply, err := f.API.CreatePickup(pickup, window)
+	switch err.(type) {
+	case nil:
+		fields["reply"] = reply
+		log.WithFields(fields).Info("made pickup")
+		return &models.PickupSuccess{
+			ConfirmationNumber: reply.PickupConfirmationNumber,
+			Window:             *window,
+		}
+
+	case models.PickupAlreadyExistsError:
+		fields["reply"] = reply
+		log.WithFields(fields).Info("pickup already exists")
+		return nil
+
+	default:
+		fields["err"] = err
+		log.WithFields(fields).Info("failed pickup")
+	}
+
+	return nil
+}
+
+func pickupTimeWindow(clock clock.Clock, pickupAddress models.Address, pickupOffset *models.PickupOffset) (*models.PickupTimeWindow, error) {
 	location, err := toLocation(pickupAddress)
 	if err != nil {
 		location = laTimeZone
 	}
 
-	readyTime := time.Now().In(location).Add(time.Duration(numDaysToDelay*24) * time.Hour)
+	readyTime := clock.Now().In(location).Add(time.Duration(pickupOffset.Days*24) * time.Hour)
 
 	// If it's past the ready time of the current day, ship the next day, not today
-	if readyTime.After(timeForReadyPickup(readyTime)) {
+	if readyTime.After(timeForReadyPickup(readyTime, pickupOffset)) {
 		readyTime = readyTime.Add(24 * time.Hour)
 	}
-	readyTime = timeForReadyPickup(readyTime)
+	readyTime = timeForReadyPickup(readyTime, pickupOffset)
 
 	// Don't schedule pickups for Sunday
 	if readyTime.Weekday() == time.Sunday {
-		return nil, fmt.Errorf("no pickups on sunday %d", numDaysToDelay)
+		return nil, fmt.Errorf("no pickups on sunday %d", pickupOffset.Days)
 	}
 
 	return &models.PickupTimeWindow{
@@ -116,8 +126,8 @@ func pickupTimeWindow(pickupAddress models.Address, numDaysToDelay int) (*models
 	}, nil
 }
 
-func timeForReadyPickup(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 10, 45, 0, 0, t.Location())
+func timeForReadyPickup(t time.Time, pickupOffset *models.PickupOffset) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), pickupOffset.Hours, pickupOffset.Minutes, 0, 0, t.Location())
 }
 
 // toLocation attempts to return the timezone based on state, returning los

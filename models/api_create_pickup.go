@@ -18,6 +18,12 @@ type PickupTimeWindow struct {
 	CloseTime time.Time
 }
 
+type PickupOffset struct {
+	Days    int
+	Hours   int
+	Minutes int
+}
+
 type CreatePickupBody struct {
 	CreatePickupRequest CreatePickupRequest `xml:"q0:CreatePickupRequest"`
 }
