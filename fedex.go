@@ -107,7 +107,7 @@ func pickupTimeWindow(clock clock.Clock, pickupAddress models.Address, pickupOff
 		location = laTimeZone
 	}
 
-	readyTime := time.Now().In(location).Add(time.Duration(pickupOffset.Days*24) * time.Hour)
+	readyTime := clock.Now().In(location).Add(time.Duration(pickupOffset.Days*24) * time.Hour)
 
 	// If it's past the ready time of the current day, ship the next day, not today
 	if readyTime.After(timeForReadyPickup(readyTime, pickupOffset)) {
