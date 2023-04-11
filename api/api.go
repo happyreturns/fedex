@@ -1,5 +1,7 @@
 package api
 
+import "net/http"
+
 type API struct {
 	Key      string `json:"key"`
 	Password string `json:"password"`
@@ -7,7 +9,7 @@ type API struct {
 	Meter    string `json:"meter"`
 	HubID    string `json:"hubID"` // for SmartPost
 
-	HrEnv string `json:"hrEnv"` // for logging
+	httpClient *http.Client `json:"-" yaml:"-"`
 
 	FedExURL string `json:"fedexURL"`
 }

@@ -6,25 +6,22 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/happyreturns/fedex/models"
-	"github.com/happyreturns/gohelpers/log"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	onlyOnce   sync.Once
-	logger     *log.Logger
-	httpClient *http.Client
+	logger *logrus.Entry
 )
 
-func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelope, response models.Response) error {
-	onlyOnce.Do(func() {
-		logger = log.NewLogger("fedex", a.HrEnv)
-		httpClient = &http.Client{Transport: logger}
+func init() {
+	logger = logrus.WithFields(logrus.Fields{
+		"app": "fedex",
 	})
+}
 
+func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelope, response models.Response) error {
 	// Create request body
 	reqXML, err := xml.Marshal(request)
 	if err != nil {
@@ -32,7 +29,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 	}
 
 	// Post XML
-	content, err := postXML(a.FedExURL+url, string(reqXML))
+	content, err := postXML(a.FedExURL+url, string(reqXML), a.httpClient)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"url":     url,
@@ -79,7 +76,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 }
 
 // postXML to Fedex API and return response
-func postXML(url, xml string) ([]byte, error) {
+func postXML(url, xml string, httpClient *http.Client) ([]byte, error) {
 	resp, err := httpClient.Post(url, "text/xml", strings.NewReader(xml))
 	if err != nil {
 		return nil, err

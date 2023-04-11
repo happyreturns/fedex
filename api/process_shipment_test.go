@@ -20,7 +20,7 @@ var (
 		},
 		Version: models.Version{
 			ServiceID: "ship",
-			Major:     23,
+			Major:     26,
 		},
 	}
 	testAPI = API{
