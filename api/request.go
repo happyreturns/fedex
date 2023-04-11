@@ -77,15 +77,24 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 
 // postXML to Fedex API and return response
 func postXML(url, xml string, httpClient *http.Client) ([]byte, error) {
-	resp, err := httpClient.Post(url, "text/xml", strings.NewReader(xml))
+	var resp *http.Response
+	var err error
+	if httpClient != nil {
+		resp, err = httpClient.Post(url, "text/xml", strings.NewReader(xml))
+	} else {
+		resp, err = http.Post(url, "text/xml", strings.NewReader(xml))
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	defer resp.Body.Close()
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all bytes: %s", err)
 	}
+
 	return content, nil
 }
