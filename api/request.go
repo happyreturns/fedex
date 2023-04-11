@@ -29,7 +29,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 	}
 
 	// Post XML
-	content, err := postXML(a.FedExURL+url, string(reqXML))
+	content, err := postXML(a.FedExURL+url, string(reqXML), a.HttpClient)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"url":     url,
@@ -59,7 +59,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 		//   --> we DO NOT log an error, it is not an error from the logging perspective
 		//   --> this is still considered an error from the code-level perspective,
 		//       so we still return the error
-		if false == strings.Contains(err.Error(), "This tracking number cannot be found") {
+		if !strings.Contains(err.Error(), "This tracking number cannot be found") {
 			logger.WithFields(logrus.Fields{
 				"url":      url,
 				"request":  string(reqXML),
@@ -76,16 +76,25 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 }
 
 // postXML to Fedex API and return response
-func postXML(url, xml string) ([]byte, error) {
-	resp, err := http.Post(url, "text/xml", strings.NewReader(xml))
+func postXML(url, xml string, httpClient *http.Client) ([]byte, error) {
+	var resp *http.Response
+	var err error
+	if httpClient != nil {
+		resp, err = httpClient.Post(url, "text/xml", strings.NewReader(xml))
+	} else {
+		resp, err = http.Post(url, "text/xml", strings.NewReader(xml))
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	defer resp.Body.Close()
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all bytes: %s", err)
 	}
+
 	return content, nil
 }
