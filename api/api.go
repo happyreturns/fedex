@@ -7,5 +7,7 @@ type API struct {
 	Meter    string `json:"meter"`
 	HubID    string `json:"hubID"` // for SmartPost
 
+	HrEnv string `json:"hrEnv"` // for logging
+
 	FedExURL string `json:"fedexURL"`
 }

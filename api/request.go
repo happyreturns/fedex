@@ -6,22 +6,25 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/happyreturns/fedex/models"
+	"github.com/happyreturns/gohelpers/log"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	logger *logrus.Entry
+	onlyOnce   sync.Once
+	logger     *log.Logger
+	httpClient *http.Client
 )
 
-func init() {
-	logger = logrus.WithFields(logrus.Fields{
-		"app": "fedex",
-	})
-}
-
 func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelope, response models.Response) error {
+	onlyOnce.Do(func() {
+		logger = log.NewLogger("fedex", a.HrEnv)
+		httpClient = &http.Client{Transport: logger}
+	})
+
 	// Create request body
 	reqXML, err := xml.Marshal(request)
 	if err != nil {
@@ -59,7 +62,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 		//   --> we DO NOT log an error, it is not an error from the logging perspective
 		//   --> this is still considered an error from the code-level perspective,
 		//       so we still return the error
-		if false == strings.Contains(err.Error(), "This tracking number cannot be found") {
+		if !strings.Contains(err.Error(), "This tracking number cannot be found") {
 			logger.WithFields(logrus.Fields{
 				"url":      url,
 				"request":  string(reqXML),
@@ -77,7 +80,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 
 // postXML to Fedex API and return response
 func postXML(url, xml string) ([]byte, error) {
-	resp, err := http.Post(url, "text/xml", strings.NewReader(xml))
+	resp, err := httpClient.Post(url, "text/xml", strings.NewReader(xml))
 	if err != nil {
 		return nil, err
 	}
