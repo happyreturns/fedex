@@ -9,7 +9,7 @@ type API struct {
 	Meter    string `json:"meter"`
 	HubID    string `json:"hubID"` // for SmartPost
 
-	httpClient *http.Client `json:"-" yaml:"-"`
+	HttpClient *http.Client `json:"-" yaml:"-"`
 
 	FedExURL string `json:"fedexURL"`
 }

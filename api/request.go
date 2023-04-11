@@ -29,7 +29,7 @@ func (a API) makeRequestAndUnmarshalResponse(url string, request *models.Envelop
 	}
 
 	// Post XML
-	content, err := postXML(a.FedExURL+url, string(reqXML), a.httpClient)
+	content, err := postXML(a.FedExURL+url, string(reqXML), a.HttpClient)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"url":     url,
