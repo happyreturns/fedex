@@ -50,32 +50,28 @@ func init() {
 // CreatePickup creates a pickup with retry logic to try pickups on different days/times
 func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.PickupSuccess, error) {
 	for delay := 0; delay <= 5; delay++ {
-		// Attempt pickup at normal time (1:00 PM - 5:00 PM)
-		earliestPickupTime := &models.PickupOffset{Days: delay, Hours: 13, Minutes: 0}
-		windowHoursDuration := 4
-		pickupResponse := f.bookPickup(pickup, earliestPickupTime, windowHoursDuration)
-		if pickupResponse != nil {
-			return pickupResponse, nil
+		pickupOffset := &models.PickupOffset{Days: delay, Hours: 10, Minutes: 45}
+		pickupSuccess := f.bookPickup(pickup, pickupOffset)
+		if pickupSuccess != nil {
+			return pickupSuccess, nil
 		}
-		log.Warn(fmt.Sprintf("Unable to schedule fedex pickup for 1:00 PM - 5:00 PM delay %d", delay))
+	}
 
-		// Attempt pickup at later time (1:00 PM - 6:00 PM)
-		earliestPickupTime = &models.PickupOffset{Days: delay, Hours: 13, Minutes: 0}
-		windowHoursDuration = 5
-		pickupResponse = f.bookPickup(pickup, earliestPickupTime, windowHoursDuration)
-		if pickupResponse != nil {
-			return pickupResponse, nil
+	for delay := 0; delay <= 5; delay++ {
+		pickupOffset := &models.PickupOffset{Days: delay, Hours: 10, Minutes: 0}
+		pickupSuccess := f.bookPickup(pickup, pickupOffset)
+		if pickupSuccess != nil {
+			return pickupSuccess, nil
 		}
-		log.Warn(fmt.Sprintf("Unable to schedule fedex pickup for 1:00 PM - 6:00 PM delay %d", delay))
 	}
 
 	return nil, fmt.Errorf("unable to schedule a fedex pickup")
 }
 
-func (f Fedex) bookPickup(pickup *models.Pickup, pickupOffset *models.PickupOffset, windowHoursDuration int) *models.PickupSuccess {
+func (f Fedex) bookPickup(pickup *models.Pickup, pickupOffset *models.PickupOffset) *models.PickupSuccess {
 	fields := log.Fields{"pickup": pickup}
 
-	window, err := pickupTimeWindow(clock.NewClock(), pickup.PickupLocation.Address, pickupOffset, windowHoursDuration)
+	window, err := pickupTimeWindow(clock.NewClock(), pickup.PickupLocation.Address, pickupOffset)
 	if err != nil {
 		log.WithFields(fields).Error("calculate pickup time", err)
 		return nil
@@ -105,7 +101,7 @@ func (f Fedex) bookPickup(pickup *models.Pickup, pickupOffset *models.PickupOffs
 	return nil
 }
 
-func pickupTimeWindow(clock clock.Clock, pickupAddress models.Address, pickupOffset *models.PickupOffset, windowHoursDuration int) (*models.PickupTimeWindow, error) {
+func pickupTimeWindow(clock clock.Clock, pickupAddress models.Address, pickupOffset *models.PickupOffset) (*models.PickupTimeWindow, error) {
 	location, err := toLocation(pickupAddress)
 	if err != nil {
 		location = laTimeZone
@@ -126,7 +122,7 @@ func pickupTimeWindow(clock clock.Clock, pickupAddress models.Address, pickupOff
 
 	return &models.PickupTimeWindow{
 		ReadyTime: readyTime,
-		CloseTime: readyTime.Add(time.Duration(windowHoursDuration) * time.Hour),
+		CloseTime: readyTime.Add(8 * time.Hour),
 	}, nil
 }
 
