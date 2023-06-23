@@ -1,5 +1,6 @@
 # The integrations team generally owns this repository
-* @happyreturns/integrations-team
+* @happyreturns/hub-team
+* @happyreturns/hub-code-reviewers
 
 # For security of github workflows infrastructure must own CODEOWNERS and .github/workflow
 # IMPORTANT: This must be at the bottom of the CODEOWNERS file
