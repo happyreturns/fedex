@@ -47,6 +47,35 @@ func init() {
 	log.SetOutput(os.Stdout)
 }
 
+// Retry logic is expected to be implemented by the caller
+func (f Fedex) CreatePickupNoRetry(pickup *models.Pickup, startTime time.Time, endTime time.Time) (*models.PickupSuccess, error) {
+	fields := log.Fields{"pickup": pickup}
+	window := &models.PickupTimeWindow{ReadyTime: startTime, CloseTime: endTime}
+
+	fields["window"] = window
+	reply, err := f.API.CreatePickup(pickup, window)
+	switch err.(type) {
+	case nil:
+		fields["reply"] = reply
+		log.WithFields(fields).Info("made pickup")
+		return &models.PickupSuccess{
+			ConfirmationNumber: reply.PickupConfirmationNumber,
+			Window:             *window,
+		}, nil
+
+	case models.PickupAlreadyExistsError:
+		fields["reply"] = reply
+		log.WithFields(fields).Info("pickup already exists")
+		return nil, fmt.Errorf("pickup already exists %w", err)
+
+	default:
+		fields["err"] = err
+		log.WithFields(fields).Info("failed pickup %w", err)
+	}
+
+	return nil, fmt.Errorf("unable to schedule a fedex pickup")
+}
+
 // CreatePickup creates a pickup with retry logic to try pickups on different days/times
 func (f Fedex) CreatePickup(pickup *models.Pickup) (*models.PickupSuccess, error) {
 	for delay := 0; delay <= 5; delay++ {
