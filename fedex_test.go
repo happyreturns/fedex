@@ -10,8 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	clockMock "github.com/happyreturns/fedex/clock/mocks"
 	"github.com/happyreturns/fedex/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -540,6 +538,16 @@ func TestCreatePickup(t *testing.T) {
 	// This will fail if there's a pickup already scheduled. Delete the pickup in
 	// the FedEx console to run the test in that case
 	t.SkipNow()
+
+	laTimeZone, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		panic(err)
+	}
+
+	today := time.Now().In(laTimeZone)
+	startTime := time.Date(today.Year(), today.Month(), today.Day(), 10, 45, 0, 0, laTimeZone)
+	endTime := time.Date(today.Year(), today.Month(), today.Day(), 18, 45, 0, 0, laTimeZone)
+
 	pickup := &models.Pickup{
 		PickupLocation: models.PickupLocation{
 			Address: models.Address{
@@ -563,7 +571,7 @@ func TestCreatePickup(t *testing.T) {
 		},
 	}
 
-	success, err := prodFedex.CreatePickup(pickup)
+	success, err := prodFedex.CreatePickup(pickup, startTime, endTime)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -574,28 +582,12 @@ func TestCreatePickup(t *testing.T) {
 
 	readyTime := success.Window.ReadyTime
 	closeTime := success.Window.CloseTime
-	today := time.Now().In(laTimeZone)
-	tomorrow := today.Add(24 * time.Hour)
-	if !readyTime.Equal(time.Date(today.Year(), today.Month(), today.Day(), 10, 45, 0, 0, laTimeZone)) &&
-		!readyTime.Equal(time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 10, 45, 0, 0, laTimeZone)) {
-		t.Fatal("readyTime should set at 10:45 either today or tomorrow")
-	}
 
-	if !closeTime.Equal(time.Date(readyTime.Year(), readyTime.Month(), readyTime.Day(), 18, 45, 0, 0, laTimeZone)) {
-		t.Fatal("closeTime should set at 18:45 on the same day as the ready time")
-	}
+	assert.Equal(t, startTime.Hour(), readyTime.Hour())
+	assert.Equal(t, startTime.Minute(), readyTime.Minute())
 
-	success, err = prodFedex.CreatePickup(pickup)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if success.ConfirmationNumber != "" {
-		t.Fatal("confirmation number should be empty since the pickup already exists")
-	}
-	if success.Window.ReadyTime != readyTime || success.Window.CloseTime != closeTime {
-		t.Fatal("readyTime and closeTime should be the same from the previous pickup call")
-	}
+	assert.Equal(t, endTime.Hour(), closeTime.Hour())
+	assert.Equal(t, endTime.Minute(), closeTime.Minute())
 }
 
 func TestSendNotifications(t *testing.T) {
@@ -724,101 +716,6 @@ func testShipSmartPostSuccess(t *testing.T, fedexAccount Fedex) {
 		fmt.Println(reply)
 		t.Fatal("reply should not have failed")
 	}
-}
-
-func TestPickupTimeWindow(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	t.Run("happy path", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 45}
-		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
-		pickupTimeWindow, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.Nil(t, err)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Hour(), 10)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Minute(), 45)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Hour(), 18)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Minute(), 45)
-	})
-
-	t.Run("earlier pickup", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
-		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
-		pickupTimeWindow, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.Nil(t, err)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Hour(), 10)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Minute(), 0)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Hour(), 18)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Minute(), 0)
-	})
-
-	t.Run("pickup with day delay", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 3, Hours: 10, Minutes: 0}
-		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
-		pickupTimeWindow, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.Nil(t, err)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Day(), 5)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Hour(), 10)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Minute(), 0)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Day(), 5)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Hour(), 18)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Minute(), 0)
-	})
-
-	t.Run("pickup time past current time", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 2, 11, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
-		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
-		pickupTimeWindow, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.Nil(t, err)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Day(), 3)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Hour(), 10)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Minute(), 0)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Day(), 3)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Hour(), 18)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Minute(), 0)
-	})
-
-	t.Run("sunday pickup", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 0}
-		pickupAddress := models.Address{StateOrProvinceCode: "CA"}
-		_, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.NotNil(t, err)
-	})
-
-	t.Run("no state provided", func(t *testing.T) {
-		mockClock := clockMock.NewMockClock(ctrl)
-		testDate := time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC)
-		mockClock.EXPECT().Now().Return(testDate).Times(1)
-
-		pickupOffset := &models.PickupOffset{Days: 0, Hours: 10, Minutes: 45}
-		pickupAddress := models.Address{StateOrProvinceCode: "no state"}
-		pickupTimeWindow, err := pickupTimeWindow(mockClock, pickupAddress, pickupOffset)
-		assert.Nil(t, err)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Hour(), 10)
-		assert.Equal(t, pickupTimeWindow.ReadyTime.Minute(), 45)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Hour(), 18)
-		assert.Equal(t, pickupTimeWindow.CloseTime.Minute(), 45)
-	})
 }
 
 func checkErrorMatches(t *testing.T, err error, expectedText string) {
