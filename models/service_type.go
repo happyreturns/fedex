@@ -3,7 +3,7 @@ package models
 // ServiceType determines the service type (the FedEx API field) based on the
 // service (the HR-defined property) and the source/destination. Needed for
 // both rates and shipments. Ideally I don't think this should live in models.
-func ServiceType(fromAndTo FromAndTo, service string) string {
+func ServiceType(fromAndTo FromAndTo, service string, serviceLevel string) string {
 	// TODO This is confusing. If the service is marked as "fedex_smart_post" or
 	// "fedex_international_economy" (this is done through the CMS), then
 	// explicitly set the service type as SmartPost or InternationalEconomy
@@ -17,12 +17,16 @@ func ServiceType(fromAndTo FromAndTo, service string) string {
 	isInternational := fromAndTo.IsInternational()
 	shipsOutWithInternationalEconomy := fromAndTo.FromAddress.ShipsOutWithInternationalEconomy()
 	switch {
-	case service == "fedex_smart_post",
-		service == "return" && !isInternational:
+
+	case service == "fedex_smart_post", service == "return" && !isInternational:
 		return ServiceTypeSmartPost
-	case service == "fedex_international_economy" ||
-		(isInternational && shipsOutWithInternationalEconomy):
+
+	case service == "fedex_international_economy" || (isInternational && shipsOutWithInternationalEconomy):
 		return ServiceTypeInternationalEconomy
+
+	case serviceLevel == "fedex_express":
+		return ServiceTypeExpressSaver
+
 	default:
 		return ServiceTypeFedexGround
 	}

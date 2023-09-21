@@ -47,6 +47,7 @@ const (
 	ServiceTypeInternationalEconomy        = "INTERNATIONAL_ECONOMY"
 	ServiceTypeInternationalEconomyFreight = "INTERNATIONAL_ECONOMY_FREIGHT"
 	ServiceTypeSmartPost                   = "SMART_POST"
+	ServiceTypeExpressSaver                = "FEDEX_EXPRESS_SAVER"
 
 	SpecialServiceTypeElectronicTradeDocuments = "ELECTRONIC_TRADE_DOCUMENTS"
 	SpecialServiceTypeReturnShipment           = "RETURN_SHIPMENT"
