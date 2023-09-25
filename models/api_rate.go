@@ -16,7 +16,7 @@ type Rate struct {
 }
 
 func (r *Rate) ServiceType() string {
-	serviceType := ServiceType(r.FromAndTo, r.Service, "")
+	serviceType := ServiceType(r.FromAndTo, r.Service, r.Service)
 	if serviceType == ServiceTypeSmartPost {
 		// This is necessary. We can't get back smartpost rates. So using ground
 		// instead here.

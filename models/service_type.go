@@ -24,7 +24,7 @@ func ServiceType(fromAndTo FromAndTo, service string, serviceLevel string) strin
 	case service == "fedex_international_economy" || (isInternational && shipsOutWithInternationalEconomy):
 		return ServiceTypeInternationalEconomy
 
-	case serviceLevel == "fedex_express":
+	case service == "fedex_express" || serviceLevel == "fedex_express":
 		return ServiceTypeExpressSaver
 
 	default:
