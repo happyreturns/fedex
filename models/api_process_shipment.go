@@ -35,7 +35,7 @@ func init() {
 }
 
 func (s *Shipment) ServiceType() string {
-	return ServiceType(s.FromAndTo, s.Service)
+	return ServiceType(s.FromAndTo, s.Service, s.MethodServiceLevel)
 }
 
 func (s *Shipment) Broker() string {
