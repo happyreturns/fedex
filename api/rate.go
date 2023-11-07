@@ -33,6 +33,7 @@ func (a API) rateRequest(rate *models.Rate) *models.Envelope {
 	// work
 	serviceType := rate.ServiceType()
 	weight := rate.Weight()
+	fmt.Println("$$fedexweight", weight)
 
 	return &models.Envelope{
 		Soapenv:   "http://schemas.xmlsoap.org/soap/envelope/",

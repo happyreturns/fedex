@@ -71,6 +71,9 @@ func (r *Rate) Weight() Weight {
 		// fedex ground rates
 		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
 		commoditiesWeight.Value = math.Max(commoditiesWeight.Value, 13.0)
+
+		fmt.Println("$$commoditiesWeight", commoditiesWeight)
+
 		return commoditiesWeight
 	}
 
