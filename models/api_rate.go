@@ -65,10 +65,6 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 func (r *Rate) Weight() Weight {
 	commoditiesWeight := r.Commodities.Weight()
 	if !commoditiesWeight.IsZero() {
-		// Assume the weight must be between than 13 and 150 lbs.
-		// If the weight is less than 13 lbs, assume a weight of 13 lbs, which is
-		// heavy enough that the destination will matter when choosing between two
-		// fedex ground rates
 		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
 		return commoditiesWeight
 	}
