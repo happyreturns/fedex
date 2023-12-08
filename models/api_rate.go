@@ -62,14 +62,25 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 	}
 }
 
+func maximumBetween(x float64, y float64) float64 {
+	return math.Min(x, y)
+}
+
 func (r *Rate) Weight() Weight {
-	commoditiesWeight := r.Commodities.Weight()
-	if !commoditiesWeight.IsZero() {
-		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
-		return commoditiesWeight
+	commoditiesSumWeight := r.Commodities.Weight()
+
+	if !commoditiesSumWeight.IsZero() {
+		var maximumWeightInLbs = 150.0
+
+		var maxWeight = maximumBetween(commoditiesSumWeight.Value, maximumWeightInLbs)
+		commoditiesSumWeight.Value = maxWeight
+
+		return commoditiesSumWeight
 	}
 
-	return Weight{Units: WeightUnitsLB, Value: 0.9375}
+	var safeGuardForZeroWeightLbs = 0.9375
+
+	return Weight{Units: WeightUnitsLB, Value: safeGuardForZeroWeightLbs}
 }
 
 type RateBody struct {
