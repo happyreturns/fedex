@@ -69,7 +69,7 @@ func (r *Rate) Weight() Weight {
 		return commoditiesWeight
 	}
 
-	return Weight{Units: WeightUnitsLB, Value: 13}
+	return Weight{Units: WeightUnitsLB, Value: 0.9375}
 }
 
 type RateBody struct {
