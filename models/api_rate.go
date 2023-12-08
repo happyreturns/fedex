@@ -62,17 +62,13 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 	}
 }
 
-func maximumBetween(x float64, y float64) float64 {
-	return math.Min(x, y)
-}
-
 func (r *Rate) Weight() Weight {
 	commoditiesSumWeight := r.Commodities.Weight()
 
 	if !commoditiesSumWeight.IsZero() {
 		var maximumWeightInLbs = 150.0
 
-		var maxWeight = maximumBetween(commoditiesSumWeight.Value, maximumWeightInLbs)
+		var maxWeight = math.Min(commoditiesSumWeight.Value, maximumWeightInLbs)
 		commoditiesSumWeight.Value = maxWeight
 
 		return commoditiesSumWeight
