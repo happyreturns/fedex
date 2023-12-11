@@ -68,8 +68,7 @@ func (r *Rate) Weight() Weight {
 	if !commoditiesSumWeight.IsZero() {
 		var maximumWeightInLbs = 150.0
 
-		var maxWeight = math.Min(commoditiesSumWeight.Value, maximumWeightInLbs)
-		commoditiesSumWeight.Value = maxWeight
+		commoditiesSumWeight.Value = math.Min(commoditiesSumWeight.Value, maximumWeightInLbs)
 
 		return commoditiesSumWeight
 	}
