@@ -55,4 +55,7 @@ const (
 	StockTypePaperLetter = "PAPER_LETTER"
 	StockTypePaper4x6    = "PAPER_4X6"
 	WeightUnitsLB        = "LB"
+
+	MaximumWeightInLbs       = 150.0
+	SafeGuardForZeroWeightOz = 15
 )
