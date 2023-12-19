@@ -57,5 +57,5 @@ const (
 	WeightUnitsLB        = "LB"
 
 	MaximumWeightInLbs       = 150.0
-	SafeGuardForZeroWeightOz = 15
+	SafeGuardForZeroWeightOz = 13
 )
