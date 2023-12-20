@@ -83,19 +83,22 @@ type Commodity struct {
 type Commodities []Commodity
 
 func (c Commodities) Weight() Weight {
-	if len(c) == 0 {
+	var isCommoditiesEmpty = len(c) == 0
+	if isCommoditiesEmpty {
 		return Weight{Units: "LB", Value: 0.0}
 	}
 
-	// Assume all the units are the same
-	weight := Weight{
-		Units: c[0].Weight.Units,
+	var firstItemUnit = c[0].Weight.Units
+	sumWeights := Weight{
+		Units: firstItemUnit,
 		Value: 0.0,
 	}
+
 	for _, commodity := range c {
-		weight.Value += commodity.Weight.Value
+		sumWeights.Value += commodity.Weight.Value
 	}
-	return weight
+
+	return sumWeights
 }
 
 func (c Commodities) CustomsValue() (Money, error) {

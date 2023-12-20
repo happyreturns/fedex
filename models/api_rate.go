@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/happyreturns/fedex/conv"
 )
 
 // Rate wraps all the Fedex API fields needed for getting a rate
@@ -63,17 +65,15 @@ func (r *Rate) SpecialServicesRequested() *SpecialServicesRequested {
 }
 
 func (r *Rate) Weight() Weight {
-	commoditiesWeight := r.Commodities.Weight()
-	if !commoditiesWeight.IsZero() {
-		// Assume the weight must be between than 13 and 150 lbs.
-		// If the weight is less than 13 lbs, assume a weight of 13 lbs, which is
-		// heavy enough that the destination will matter when choosing between two
-		// fedex ground rates
-		commoditiesWeight.Value = math.Min(commoditiesWeight.Value, 150.0)
-		return commoditiesWeight
+	commoditiesSumWeight := r.Commodities.Weight()
+
+	if !commoditiesSumWeight.IsZero() {
+		commoditiesSumWeight.Value = math.Min(commoditiesSumWeight.Value, MaximumWeightInLbs)
+
+		return commoditiesSumWeight
 	}
 
-	return Weight{Units: WeightUnitsLB, Value: 13}
+	return Weight{Units: WeightUnitsLB, Value: conv.WeightInLbs(SafeGuardForZeroWeightOz, "oz")}
 }
 
 type RateBody struct {
