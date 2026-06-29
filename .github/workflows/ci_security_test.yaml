@@ -1,0 +1,49 @@
+# TEMP test (IN-9857 Step 0) — CodeQL Go autobuild on a real Linux runner. upload:false (no GHAS). DO NOT MERGE.
+name: CI Security Test (upload-false)
+run-name: ci_security floor test — ${{ github.event.repository.name }}
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+jobs:
+  codeql-go:
+    name: codeql-go (autobuild, upload-false)
+    runs-on:
+      group: ${{ vars.RUNNER_DEV_CI_SIMPLE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Configure private-module auth
+        env:
+          PAT: ${{ secrets.INFRA_BOT_V2_PAT }}
+        run: |
+          git config --global url."https://${PAT}@github.com/".insteadOf "https://github.com/"
+          go env -w GOPRIVATE=github.com/happyreturns/*
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+          build-mode: autobuild
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Analyze (no upload)
+        uses: github/codeql-action/analyze@v3
+        with:
+          upload: false
+          output: codeql-results
+      - name: Upload SARIF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif-${{ github.event.repository.name }}
+          path: codeql-results/*.sarif
+          if-no-files-found: warn
