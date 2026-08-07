@@ -4,7 +4,6 @@
 # rationale and issue links: https://github.com/happyreturns/operations/tree/main/dep_audit#dependabot-yml-generator
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
-
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
@@ -16,4 +15,7 @@ updates:
       all-dependencies:
         patterns:
           - "*"
-
+      all-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
